@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Transient diff snapshot (regenerated each build)
+results_prev.json
+
+# Local-only Claude Code config (command allowlist, etc.) — never publish
+.claude/
+
+# Private operational runbook (local delivery harness) — never publish
+OPERATIONS.local.md

@@ -1,0 +1,74 @@
+[
+  {
+    "h": "Spain",
+    "a": "Cape Verde",
+    "hg": 0,
+    "ag": 0
+  },
+  {
+    "h": "Belgium",
+    "a": "Egypt",
+    "hg": 1,
+    "ag": 1
+  },
+  {
+    "h": "Saudi Arabia",
+    "a": "Uruguay",
+    "hg": 1,
+    "ag": 1
+  },
+  {
+    "h": "Iran",
+    "a": "New Zealand",
+    "hg": 2,
+    "ag": 2
+  },
+  {
+    "h": "France",
+    "a": "Senegal",
+    "hg": 3,
+    "ag": 1
+  },
+  {
+    "h": "Iraq",
+    "a": "Norway",
+    "hg": 1,
+    "ag": 4
+  },
+  {
+    "h": "Argentina",
+    "a": "Algeria",
+    "hg": 3,
+    "ag": 0
+  },
+  {
+    "h": "Austria",
+    "a": "Jordan",
+    "hg": 3,
+    "ag": 1
+  },
+  {
+    "h": "Portugal",
+    "a": "DR Congo",
+    "hg": 1,
+    "ag": 1
+  },
+  {
+    "h": "England",
+    "a": "Croatia",
+    "hg": 4,
+    "ag": 2
+  },
+  {
+    "h": "Ghana",
+    "a": "Panama",
+    "hg": 1,
+    "ag": 0
+  },
+  {
+    "h": "Uzbekistan",
+    "a": "Colombia",
+    "hg": 1,
+    "ag": 3
+  }
+]

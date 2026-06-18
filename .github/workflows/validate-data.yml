@@ -1,0 +1,30 @@
+name: Validate data inputs
+
+# Runs on pull requests that touch the data inputs. Uses the `pull_request`
+# trigger (NOT pull_request_target): fork PRs run in an isolated runner with a
+# read-only token and no secrets, so untrusted contributions can't harm the repo.
+# The validator only parses JSON and reads data.py statically (ast) — it never
+# imports or runs build.py / model.py / gen_dashboard.py.
+on:
+  pull_request:
+    paths:
+      - results_log.json
+      - odds.json
+      - match_odds.json
+      - data.py
+      - validate_inputs.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Validate data inputs (no model code is executed)
+        run: python3 validate_inputs.py
