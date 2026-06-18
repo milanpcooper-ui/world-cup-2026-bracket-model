@@ -1,13 +1,5 @@
 [
   {
-    "h": "Switzerland",
-    "a": "Bosnia & Herzegovina",
-    "home": 0.611,
-    "draw": 0.229,
-    "away": 0.16,
-    "_src": "DraftKings via ESPN, close, 06/18"
-  },
-  {
     "h": "Canada",
     "a": "Qatar",
     "home": 0.733,
@@ -19,8 +11,8 @@
     "h": "Mexico",
     "a": "South Korea",
     "home": 0.467,
-    "draw": 0.299,
-    "away": 0.234,
+    "draw": 0.294,
+    "away": 0.239,
     "_src": "DraftKings via ESPN, close, 06/18"
   },
   {
@@ -218,17 +210,17 @@
   {
     "h": "Mexico",
     "a": "Czechia",
-    "home": 0.533,
-    "draw": 0.263,
-    "away": 0.204,
+    "home": 0.541,
+    "draw": 0.259,
+    "away": 0.2,
     "_src": "DraftKings via ESPN, close, 06/24"
   },
   {
     "h": "South Korea",
     "a": "South Africa",
-    "home": 0.605,
-    "draw": 0.234,
-    "away": 0.16,
+    "home": 0.592,
+    "draw": 0.241,
+    "away": 0.167,
     "_src": "DraftKings via ESPN, close, 06/24"
   },
   {
