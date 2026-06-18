@@ -1,4 +1,7 @@
 [
+  {"h": "Czechia",    "a": "South Africa",          "home": 0.539, "draw": 0.258, "away": 0.203, "_src": "bet365 -130/+270/+370, Jun17"},
+  {"h": "Switzerland","a": "Bosnia & Herzegovina",  "home": 0.589, "draw": 0.257, "away": 0.154, "_src": "bet365 -175/+260/+500, Jun17"},
+  {"h": "Canada",     "a": "Qatar",                 "home": 0.722, "draw": 0.184, "away": 0.094, "_src": "bet365 -333/+410/+900, Jun17"},
   {"h": "Mexico",     "a": "South Korea",           "home": 0.454, "draw": 0.289, "away": 0.257, "_src": "bet365 +110/+230/+270, Jun17"},
   {"h": "USA",        "a": "Australia",  "home": 0.630, "draw": 0.227, "away": 0.192, "_src": "FanDuel -170/+340/+420, Jun17"},
   {"h": "Scotland",   "a": "Morocco",    "home": 0.200, "draw": 0.274, "away": 0.574, "_src": "DK/OddsShark +400/+265/-135, Jun17"},

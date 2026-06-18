@@ -9,18 +9,22 @@ welcome. Many changes need no code beyond a JSON edit.
 
 `build.py` reads three JSON files each rebuild. Use the exact team names from `data.py`.
 
-- **`results_log.json`** — finished match scores to append, one object each:
-  `{"h": "England", "a": "Croatia", "hg": 2, "ag": 1}`.
+- **`results_log.json`** — finished **group-stage** match scores to append, one object each:
+  `{"h": "England", "a": "Croatia", "hg": 2, "ag": 1}`. A kickoff-time gate
+  (`schedule_gate.py`) rejects any score for a game that can't have finished yet (its
+  scheduled kickoff + ~2.5h hasn't passed) and any cross-group/knockout pairing (the model
+  simulates the knockouts; it doesn't ingest their results). If a legitimately-final score is
+  rejected, check the kickoff in `data.py` `GROUP_FIXTURES` and your clock.
 - **`odds.json`** — current title odds as implied probabilities, top ~15:
   `{"France": 0.17, "Spain": 0.17, ...}`. The model re-calibrates the rating spread to these.
 - **`match_odds.json`** — per-game 1X2 lines for upcoming, unplayed group games:
   `[{"h": "...", "a": "...", "home": 0.55, "draw": 0.25, "away": 0.20}]` (implied,
   de-vigged by the model). Played games and unknown teams are ignored automatically.
 
-Before opening a data PR, run `python3 validate_inputs.py` to catch bad JSON or mistyped
-team names (e.g. `Turkey` vs `Türkiye`). CI runs the same check automatically on PRs that
-touch these files — it parses the JSON and reads `data.py` statically, never running the
-model.
+Before opening a data PR, run `python3 validate_inputs.py` to catch bad JSON, mistyped
+team names (e.g. `Turkey` vs `Türkiye`), and results for games that haven't finished yet
+(the kickoff-time gate). CI runs the same check automatically on PRs that touch these
+files — it parses the JSON and reads `data.py` statically, never running the model.
 
 `EXECUTE.md` documents the full workflow.
 

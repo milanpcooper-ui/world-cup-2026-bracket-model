@@ -16,11 +16,22 @@ spams commits). The Pages site redeploys within ~1 minute.
 From this repo folder:
 
 1. `git pull --rebase` — start from latest.
-2. **Results.** Find every World Cup match that has finished with a final score and isn't
-   already in `results_log.json` / `data.py`. Cross-check each score against a second
-   source (ESPN, CBS Sports, Fox Sports, FIFA). Append each as `{"h","a","hg","ag"}` using
-   the EXACT team names in `data.py` (e.g. "Türkiye", "South Korea", "Côte d'Ivoire",
+2. **Results.** Find every **group-stage** World Cup match that has finished with a final
+   score and isn't already in `results_log.json` / `data.py`. Cross-check each score against
+   a second source (ESPN, CBS Sports, Fox Sports, FIFA). Append each as `{"h","a","hg","ag"}`
+   using the EXACT team names in `data.py` (e.g. "Türkiye", "South Korea", "Côte d'Ivoire",
    "DR Congo", "Bosnia & Herzegovina", "Curaçao"). Never duplicate one already recorded.
+
+   **Hard rule — only enter a game that has actually been played.** A result is admissible
+   only once its scheduled kickoff (`data.py` `GROUP_FIXTURES`, ET) plus ~2.5h has passed in
+   real time. This is enforced deterministically by a kickoff-time gate (`schedule_gate.py`,
+   used by both `build.py` and `validate_inputs.py`); a premature score is **rejected**, and
+   `publish.sh` **aborts** rather than ship it. The model ingests group-stage results only —
+   knockout rounds are simulated, so a cross-group ("knockout") result is rejected too. If a
+   publish aborts on a rejected result (look for `WC26-PUBLISH-ABORTED`), `publish.sh` reverts
+   the input edits so the next run starts clean; if you edited inputs by hand, run
+   `git checkout -- results_log.json` to clear the rejected entry. **Never invent, guess, or
+   placeholder a score** — if a game isn't finished or sources disagree, skip it.
 3. **Odds (optional).** Refresh `odds.json` (top ~15 title-odds implied probabilities) and
    `match_odds.json` (1X2 lines for upcoming group games), exact `data.py` names. Leave
    unchanged if nothing moved.
@@ -30,7 +41,7 @@ From this repo folder:
 See `CONTRIBUTING.md` for the exact input formats.
 
 ## Inputs & change tracking
-- `results_log.json` — array of finished matches `{"h","a","hg","ag"}`. New finals get appended (deduped against `data.py`).
+- `results_log.json` — array of finished **group-stage** matches `{"h","a","hg","ag"}`. New finals get appended (deduped against `data.py`). A deterministic kickoff-time gate (`schedule_gate.py`) rejects any entry whose game can't have finished yet (kickoff + ~2.5h not elapsed) and any cross-group/knockout pairing; `build.py` skips such entries and `validate_inputs.py` errors on them, so a fabricated or premature score can never reach the build or the live site.
 - `odds.json` — flat `{"Team": probability}` of current title odds; the model re-calibrates to it.
 - `match_odds.json` — per-game 1X2 lines `[{"h","a","home","draw","away"}]` (implied probabilities; a `_src` note is allowed and ignored). Any scheduled, unplayed group game listed here is priced **directly off the market** (the model solves the Poisson scoring rates that reproduce the line) instead of the Elo gap. Played games and unknown teams are ignored automatically.
 - `build.py` merges all three inputs, refits title odds to the market, runs 40,000 simulations, writes `results.json` (including a `match_calibration` block and a `changes` diff).

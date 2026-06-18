@@ -3,6 +3,7 @@ import os, json, datetime
 import numpy as np
 import data as D
 import model as M
+import schedule_gate as SG
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIT_ITERS = 12
@@ -28,7 +29,13 @@ def current_standings():
 def merge_results_log():
     """Merge newly-finished results appended to results_log.json (list of
     {h,a,hg,ag}) into the live results set, then refresh the model's match map.
-    This lets the nightly updater add scores without editing code."""
+    This lets the nightly updater add scores without editing code.
+
+    A deterministic kickoff-time gate (schedule_gate) refuses any result whose
+    fixture cannot physically have finished yet, measured against real wall-clock
+    time. This is the structural guard against an updater — human or the headless
+    auto-rebuild — recording a fabricated score for a game that hasn't kicked off.
+    Such an entry is skipped (never reaches the published model) and reported."""
     path = os.path.join(HERE, "results_log.json")
     if not os.path.exists(path):
         return 0
@@ -36,12 +43,24 @@ def merge_results_log():
         log = json.load(open(path))
     except Exception:
         return 0
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    group_kos = SG.group_fixture_kickoffs(D.GROUP_FIXTURES)
     have = {frozenset((h, a)) for (h, a, _, _) in D.RESULTS}
-    added = 0
+    added, skipped = 0, 0
     for e in log:
         h, a, hg, ag = e["h"], e["a"], int(e["hg"]), int(e["ag"])
-        if frozenset((h, a)) not in have:
-            D.RESULTS.append((h, a, hg, ag)); have.add(frozenset((h, a))); added += 1
+        key = frozenset((h, a))
+        if key in have:
+            continue
+        ok, reason = SG.result_admissible(h, a, D.TEAM_GROUP, group_kos, now_utc)
+        if not ok:
+            print(f"  SKIPPED unplayed result — {reason}")
+            skipped += 1
+            continue
+        D.RESULTS.append((h, a, hg, ag)); have.add(key); added += 1
+    if skipped:
+        print(f"  ⚠️  {skipped} result(s) in results_log.json refer to games that "
+              f"have not finished yet — NOT ingested (likely fabricated/premature).")
     if added:
         M.GROUP_MATCHES = M.build_group_matches()  # refresh fixed scores
     return added
@@ -226,7 +245,14 @@ def main():
         "n_sims": n,
         "groups": D.GROUPS,
         "standings": current_standings(),
-        "results_played": [{"h":h,"a":a,"hg":hg,"ag":ag,"g":D.TEAM_GROUP[h]} for (h,a,hg,ag) in D.RESULTS],
+        # Only intra-group results feed the model (model.build_group_matches
+        # fixes same-group scores; knockouts are simulated). Mirror that here so
+        # the published "new results" banner can never surface a non-ingested
+        # cross-group/unknown entry — and so this never KeyErrors on one.
+        "results_played": [{"h":h,"a":a,"hg":hg,"ag":ag,"g":D.TEAM_GROUP[h]}
+                           for (h,a,hg,ag) in D.RESULTS
+                           if h in D.TEAM_GROUP and a in D.TEAM_GROUP
+                           and D.TEAM_GROUP[h] == D.TEAM_GROUP[a]],
         "teams": team_rows,
         "matches": matches,
         "england": england,

@@ -14,7 +14,8 @@ Inspect the data shape (GROUPS / GROUP_FIXTURES / JSON inputs) without running
 the model — a safe, allowlistable replacement for ad-hoc `python3 -c` snippets:
     python3 validate_inputs.py --describe
 """
-import ast, json, os, sys, difflib
+import ast, json, os, sys, difflib, datetime
+import schedule_gate as SG
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 errors, warnings = [], []
@@ -140,6 +141,14 @@ def describe():
 def main():
     teams, group_of = canonical_teams()
 
+    # Deterministic kickoff-time gate inputs: the schedule, read statically (never
+    # executing data.py), and the real current time. A result for a fixture that
+    # cannot have finished yet is a fabrication and is rejected here, before
+    # publish.sh can commit it.
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    gf = static_value("GROUP_FIXTURES")
+    group_kos = SG.group_fixture_kickoffs(gf) if isinstance(gf, list) else {}
+
     rl = load_json("results_log.json")
     if isinstance(rl, list):
         seen = set()
@@ -149,11 +158,15 @@ def main():
                 err(f"{tag}: must be an object {{h,a,hg,ag}}"); continue
             for k in ("h", "a", "hg", "ag"):
                 if k not in e: err(f'{tag}: missing "{k}"')
-            check_fixture(tag, e, teams, group_of, seen)
+            h, a = check_fixture(tag, e, teams, group_of, seen)
             for k in ("hg", "ag"):
                 v = e.get(k)
                 if v is not None and not goal_ok(v):
                     err(f'{tag}: "{k}" must be a non-negative whole number (got {v!r})')
+            if h in teams and a in teams and h != a:
+                ok, reason = SG.result_admissible(h, a, group_of, group_kos, now_utc)
+                if not ok:
+                    err(f"{tag}: {reason}")
     elif rl is not None:
         err("results_log.json: must be a JSON array")
 
