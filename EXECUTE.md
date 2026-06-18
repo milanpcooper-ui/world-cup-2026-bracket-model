@@ -6,18 +6,19 @@ then publish to the live site.
 ## Automated rebuilds
 
 During the tournament a scheduled job runs **`refresh.sh`** every 3 hours. It is fully
-deterministic — **no LLM decides results**:
+deterministic — **no LLM decides results or odds**:
 
 ```
-git pull --rebase --autostash  →  python3 fetch_results.py  →  bash publish.sh
+git pull --rebase --autostash  →  fetch_results.py  →  fetch_odds.py  →  publish.sh
 ```
 
 `fetch_results.py` reads finished group-stage scores from **real sports feeds and
 cross-validates them** (see below), appending only confirmed results to `results_log.json`.
-`publish.sh` then rebuilds and pushes to GitHub Pages **only when an input actually changed**
-(fixed RNG seeds mean a no-data rebuild is a no-op, so it never spams commits). The Pages site
-redeploys within ~1 minute. Because results come only from feeds that agree with each other —
-never from a model's guess — fabricated scores are structurally impossible.
+`fetch_odds.py` refreshes both odds inputs from live markets (also below). `publish.sh` then
+rebuilds and pushes to GitHub Pages **only when an input actually changed** (fixed RNG seeds
+mean a no-data rebuild is a no-op, so it never spams commits). The Pages site redeploys within
+~1 minute. Because results and odds come only from real market/feed data — never from a model's
+guess — fabricated values are structurally impossible.
 
 ### How results are validated (`fetch_results.py`)
 For every scheduled group game not already recorded, it queries independent sources and
@@ -34,6 +35,17 @@ elapsed → skip, caught next run). Every ingested score must also pass the dete
 kickoff-time gate (`schedule_gate.py`). Run `python3 fetch_results.py --dry-run` to preview,
 `--full` to scan the whole group stage (backfill).
 
+### How odds are sourced (`fetch_odds.py`)
+Both odds inputs come from live markets, de-vigged, with **no key**:
+- **`match_odds.json`** (per-game 1X2) ← ESPN scoreboard's inline DraftKings moneylines for
+  upcoming group games. American odds → implied prob → normalize to sum 1.
+- **`odds.json`** (title odds) ← Polymarket's public "World Cup Winner" market (Gamma API).
+  Each team's Yes price is its implied win prob; de-vigged across all listed outcomes.
+
+A file is rewritten only when the market moved materially (≥0.5pp title / ≥1pp on a 1X2 leg),
+so quiet runs don't churn commits. `python3 fetch_odds.py --dry-run` previews; `--match` /
+`--title` limit to one file. (Kalshi's `KXMWORLDCUP` series is an alternative title source.)
+
 ## Updating it manually
 
 From this repo folder:
@@ -48,9 +60,10 @@ From this repo folder:
    `build.py` and `validate_inputs.py`) **rejects** a premature or cross-group score and
    `publish.sh` **aborts** (prints `WC26-PUBLISH-ABORTED` and reverts the edit). **Never
    invent or placeholder a score.**
-3. **Odds (optional, manual).** Odds are no longer auto-refreshed. To update calibration, edit
-   `odds.json` (top ~15 title-odds implied probabilities) and/or `match_odds.json` (1X2 lines
-   for upcoming group games), exact `data.py` names. Leave unchanged if nothing moved.
+3. **Odds.** Run `python3 fetch_odds.py` (also part of `refresh.sh`). It rewrites `odds.json`
+   (title odds, from Polymarket) and `match_odds.json` (per-game 1X2, from ESPN) off the live
+   market — no hand-editing needed. You can still hand-edit either file; the model reads them
+   as-is.
 4. **Publish:** `bash publish.sh "what changed"` — validates inputs, rebuilds, and pushes to
    GitHub Pages only if an input changed. The build prints a "WHAT CHANGED SINCE LAST BUILD"
    section.
@@ -70,12 +83,15 @@ See `CONTRIBUTING.md` for the exact input formats.
 - `data.py` `model.py` `annexC.txt` `build.py` `gen_dashboard.py` — the model (don't edit unless you know why).
 - `fetch_results.py` — pulls finished group-stage results from real sports feeds and
   cross-validates them; appends confirmed scores to `results_log.json` (no LLM, no guessing).
+- `fetch_odds.py` — refreshes `match_odds.json` (ESPN 1X2) and `odds.json` (Polymarket title
+  odds) off live markets, de-vigged.
 - `schedule_gate.py` — deterministic kickoff-time gate shared by `fetch_results.py`,
   `build.py`, and `validate_inputs.py`.
-- `refresh.sh` — the deterministic auto-refresh: `git pull` → `fetch_results.py` → `publish.sh`.
+- `refresh.sh` — the deterministic auto-refresh: `git pull` → `fetch_results.py` →
+  `fetch_odds.py` → `publish.sh`.
 - `publish.sh` — validate inputs, rebuild, push to GitHub Pages, only when an input changed.
-- `results_log.json` `odds.json` `match_odds.json` — the three live inputs (`results_log.json`
-  is now feed-populated; the two odds files are manual).
+- `results_log.json` `odds.json` `match_odds.json` — the three live inputs, all now populated
+  deterministically from feeds/markets.
 - `results.json` — latest computed output (includes a `changes` block vs the prior build).
 - `results_prev.json` — auto-saved snapshot of the previous build, for the diff (gitignored).
 - `index.html` / `World_Cup_2026_Predictor.html` — the dashboard (Pages root + standalone copy); `version.json` powers the "newer build available" banner.

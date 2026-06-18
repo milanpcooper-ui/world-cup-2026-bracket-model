@@ -1,11 +1,12 @@
 # Contributing
 
 Thanks for helping improve the World Cup 2026 predictive bracket! It's a small,
-data-driven model. Live results are refreshed automatically every 3 hours from
-cross-validated sports feeds (`fetch_results.py`; odds are updated manually), so the most
-useful PRs tend to be **model & calibration improvements, more reliable/additional data
-sources, and UX/accessibility fixes** — though data corrections are always welcome. Many
-changes need no code beyond a JSON edit.
+data-driven model. Live results and odds are refreshed automatically every 3 hours from real
+feeds — results cross-validated from sports APIs (`fetch_results.py`), odds de-vigged from
+live markets (`fetch_odds.py`: ESPN match lines + Polymarket title odds) — so the most useful
+PRs tend to be **model & calibration improvements, more reliable/additional data sources, and
+UX/accessibility fixes**, though data corrections are always welcome. Many changes need no code
+beyond a JSON edit.
 
 ## The three live inputs (no code needed)
 
@@ -18,11 +19,13 @@ changes need no code beyond a JSON edit.
   scheduled kickoff + ~2.5h hasn't passed) and any cross-group/knockout pairing (the model
   simulates the knockouts; it doesn't ingest their results). If a legitimately-final score is
   rejected, check the kickoff in `data.py` `GROUP_FIXTURES` and your clock.
-- **`odds.json`** — current title odds as implied probabilities, top ~15:
+- **`odds.json`** — current title odds as implied probabilities:
   `{"France": 0.17, "Spain": 0.17, ...}`. The model re-calibrates the rating spread to these.
+  Auto-refreshed by `fetch_odds.py` from Polymarket's "World Cup Winner" market.
 - **`match_odds.json`** — per-game 1X2 lines for upcoming, unplayed group games:
-  `[{"h": "...", "a": "...", "home": 0.55, "draw": 0.25, "away": 0.20}]` (implied,
-  de-vigged by the model). Played games and unknown teams are ignored automatically.
+  `[{"h": "...", "a": "...", "home": 0.55, "draw": 0.25, "away": 0.20}]` (implied, de-vigged).
+  Auto-refreshed by `fetch_odds.py` from ESPN's DraftKings moneylines. Played games and unknown
+  teams are ignored automatically.
 
 Before opening a data PR, run `python3 validate_inputs.py` to catch bad JSON, mistyped
 team names (e.g. `Turkey` vs `Türkiye`), and results for games that haven't finished yet
@@ -58,8 +61,11 @@ Requires Python 3 and NumPy (`pip install numpy`). `build.py` runs ~40k simulati
 - `gen_dashboard.py` — renders `results.json` into the standalone HTML dashboard.
 - `fetch_results.py` — fetches finished results from real feeds (ESPN + TheSportsDB +
   optional football-data.org), cross-validates them, and appends to `results_log.json`.
+- `fetch_odds.py` — refreshes `match_odds.json` (ESPN 1X2) and `odds.json` (Polymarket title
+  odds) off live markets, de-vigged.
 - `schedule_gate.py` — the deterministic kickoff-time gate (shared safety net).
-- `refresh.sh` — the deterministic auto-refresh (`git pull` → `fetch_results.py` → `publish.sh`).
+- `refresh.sh` — the deterministic auto-refresh (`git pull` → `fetch_results.py` →
+  `fetch_odds.py` → `publish.sh`).
 
 See the README and the dashboard's **Method** tab for the modelling assumptions.
 

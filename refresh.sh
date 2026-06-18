@@ -30,6 +30,12 @@ elif [ "$fetch_rc" != "0" ]; then
   exit "$fetch_rc"
 fi
 
+echo "[refresh] refreshing market odds (ESPN match 1X2 + Polymarket title)…"
+# Odds are calibration inputs, not facts — a feed hiccup must NOT abort the run;
+# fetch_odds.py only rewrites a file when the market moved materially, so this is a
+# no-op on quiet runs and never spams commits.
+python3 fetch_odds.py || echo "[refresh] NOTE: odds refresh had an issue (non-fatal) — keeping last-known odds."
+
 echo "[refresh] publishing (rebuilds + pushes only if an input changed)…"
 # publish.sh re-validates the inputs (incl. the kickoff-time gate) as a final
 # backstop, then rebuilds and pushes only when results_log.json actually changed.
