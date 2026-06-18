@@ -86,6 +86,12 @@ section.on{display:block}
  padding:12px 15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .chhead .t{font-weight:800;font-size:15.5px}
 .chhead .since{color:var(--mut);font-size:12px;font-weight:500}
+.chtoggle{margin-left:auto;flex:none;background:transparent;border:1px solid var(--bd);color:var(--mut);
+ border-radius:9px;width:28px;height:28px;cursor:pointer;font-size:12px;line-height:1;
+ display:inline-flex;align-items:center;justify-content:center;transition:transform .18s ease,background .18s,color .18s}
+.chtoggle:hover{background:var(--panel2);color:var(--ink)}
+.changes.collapsed .chtoggle{transform:rotate(-90deg)}
+.changes.collapsed .chbody{display:none}
 .chbody{padding:6px 15px 13px}
 .crow{padding:9px 0;border-top:1px solid var(--bd);display:flex;gap:11px;align-items:flex-start}
 .crow:first-child{border-top:none}
@@ -207,6 +213,28 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  .modal{align-items:center;padding:18px}
  .box{border-radius:20px}
 }
+/* live odds tab */
+.lo-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;
+ font-size:13px;color:var(--mut);font-weight:600}
+.lo-live{display:inline-flex;align-items:center;gap:6px;color:var(--good-ink);font-weight:800}
+.lo-dot{width:8px;height:8px;border-radius:50%;background:var(--good);animation:lopulse 1.8s infinite}
+@keyframes lopulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}70%{box-shadow:0 0 0 7px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.lo-list{display:flex;flex-direction:column}
+.lo-row{display:grid;grid-template-columns:minmax(116px,1.4fr) minmax(70px,3fr) 50px 86px;
+ align-items:center;gap:11px;padding:8px 4px;border-bottom:1px solid var(--bd)}
+.lo-row:last-child{border-bottom:none}
+.lo-rank{color:var(--mut);font-size:12px;font-weight:700;width:18px;text-align:right}
+.lo-team{display:flex;align-items:center;gap:7px;font-weight:600;min-width:0}
+.lo-team .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lo-barwrap{background:var(--track);border-radius:999px;height:11px;overflow:hidden}
+.lo-bar{height:100%;background:var(--grad);border-radius:999px;transition:width .45s ease}
+.lo-mkt{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.lo-mdl{text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--mut)}
+.lo-skel{height:11px;border-radius:999px;background:var(--panel2);
+ background-image:linear-gradient(90deg,transparent,var(--track),transparent);
+ background-size:200% 100%;animation:loshim 1.2s infinite}
+@keyframes loshim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media(max-width:540px){.lo-row{grid-template-columns:minmax(104px,1.3fr) 1fr 46px;gap:9px}.lo-mdl{display:none}}
 </style></head>
 <body>
 <div class="updatebar" id="updatebar" hidden role="status">
@@ -234,6 +262,7 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 
 <nav>
  <button data-t="bracket" class="on">Bracket</button>
+ <button data-t="liveodds">📈 Live odds</button>
  <button data-t="yourteam">⭐ Your team</button>
  <button data-t="teams">Teams</button>
  <button data-t="groups">Groups</button>
@@ -248,6 +277,15 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  </div>
  <div class="bracket" id="brk"></div>
  <div class="card" style="margin-top:12px"><b>🥉 Third-place match</b> <span class="muted" id="tpline"></span></div>
+</section>
+
+<section id="liveodds">
+ <div class="card">
+  <h3 style="margin-top:0">📈 Live title odds — World Cup winner</h3>
+  <div class="muted" style="margin-bottom:13px">The market's live read on who lifts the trophy, straight from the <b>Polymarket</b> prediction market and de-vigged to an implied win probability — the same market the model calibrates to. Fetched live in your browser, with our model's number alongside for comparison.</div>
+  <div id="loBody"></div>
+  <div class="muted" style="margin-top:14px;font-size:12.5px">Source: <a href="https://polymarket.com/event/world-cup-winner" target="_blank" rel="noopener">Polymarket · World Cup Winner ↗</a> · de-vigged across the field · falls back to the last build's snapshot if the market can't be reached.</div>
+ </div>
 </section>
 
 <section id="yourteam"><div id="yt"></div></section>
@@ -330,6 +368,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
  b.classList.add('on'); byId(b.dataset.t).classList.add('on');
+ if(b.dataset.t==='liveodds') ensureLiveOdds();
  window.scrollTo({top:0,behavior:'smooth'});
 });
 
@@ -414,10 +453,23 @@ function renderChanges(){
  if(c.title_movers&&c.title_movers.length)
   rows.push(crow('title','Title movers',c.title_movers.slice(0,6).map(x=>{const u=x.new>=x.old;return `<div class="mvrow">${flag(x.team)} ${esc(x.team)} <span class="muted">${pct(x.old)}</span> <span class="${u?'up':'down'}">→ ${pct(x.new)} ${u?'▲':'▼'}</span></div>`;}).join('')));
  const body = rows.length?rows.join(''):`<div class="crow"><div class="cbody muted">Odds may have nudged, but no tracked matchup, route, or title moved past the reporting threshold.</div></div>`;
- el.innerHTML=`<div class="chhead"><span class="t">🔔 Today's movement</span> ${since}</div>
-  <div class="chbody"><div class="crow"><div class="cbody headline">${esc(hl)}.</div></div>
+ el.innerHTML=`<div class="chhead"><span class="t">🔔 Today's movement</span> ${since}
+   <button class="chtoggle" id="chtoggle" type="button" aria-expanded="true" aria-controls="chbody" aria-label="Collapse Today's movement" onclick="toggleChanges()">▾</button></div>
+  <div class="chbody" id="chbody"><div class="crow"><div class="cbody headline">${esc(hl)}.</div></div>
   ${c.summary?`<div class="crow"><div class="cbody ctx">${esc(c.summary)}</div></div>`:''}${body}</div>`;
+ let mvCol=false;try{mvCol=localStorage.getItem('wc-mv-collapsed')==='1'}catch(e){}
+ if(mvCol)setChangesCollapsed(true);
 }
+// collapse/expand the movement card; persists across reloads
+function setChangesCollapsed(col){
+ const el=byId('changes');if(!el)return;
+ el.classList.toggle('collapsed',col);
+ const b=byId('chtoggle');
+ if(b){b.setAttribute('aria-expanded',(!col).toString());
+  b.setAttribute('aria-label',(col?'Expand':'Collapse')+" Today's movement");}
+ try{localStorage.setItem('wc-mv-collapsed',col?'1':'0')}catch(e){}
+}
+function toggleChanges(){setChangesCollapsed(!byId('changes').classList.contains('collapsed'));}
 function crow(cls,tag,inner){return `<div class="crow"><span class="ctag ${cls}">${tag}</span><div class="cbody">${inner}</div></div>`;}
 // bold the "who moved" lead-in of a why sentence, leave the cause/confidence muted
 function whyHtml(why){const i=why.indexOf(' — ');
@@ -591,6 +643,55 @@ function renderMethod(){
  } else {byId('mcalhd').style.display='none';byId('mcaltbl').previousElementSibling.style.display='none';byId('mcaltbl').style.display='none';}
 }
 
+/* ---- Live odds (Polymarket, fetched client-side, de-vigged) ---- */
+const PM_SLUG='world-cup-winner';
+const _loNorm=s=>(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const _PM_ALIAS={'ivory coast':"Côte d'Ivoire",'congo dr':'DR Congo','dr congo':'DR Congo','turkey':'Türkiye',
+ 'united states':'USA','korea republic':'South Korea','bosnia and herzegovina':'Bosnia & Herzegovina',
+ 'czech republic':'Czechia','cape verde islands':'Cape Verde','curacao':'Curaçao'};
+const _FLAGN={},_ALIASN={};
+Object.keys(FLAG).forEach(t=>{_FLAGN[_loNorm(t)]=t;});
+Object.keys(_PM_ALIAS).forEach(k=>{_ALIASN[_loNorm(k)]=_PM_ALIAS[k];});
+function loCanon(name){const n=_loNorm(name);return _FLAGN[n]||_ALIASN[n]||null;}   // -> canonical team or null
+const _loModel={}; DATA.teams.forEach(t=>{_loModel[t.team]=t.p_champ;});
+let _loData=null,_loTs=null,_loState='idle',_loInit=false;   // state: idle|loading|live|error
+function _loSnapshot(){return (DATA.calibration||[]).filter(c=>c&&c.market!=null)
+ .map(c=>({team:c.team,market:c.market})).sort((a,b)=>b.market-a.market);}
+async function fetchLiveOdds(){
+ if(_loState==='loading')return; _loState='loading'; renderLiveOdds();
+ try{
+  const r=await fetch('https://gamma-api.polymarket.com/events?slug='+PM_SLUG+'&_='+Date.now(),{cache:'no-store'});
+  if(!r.ok)throw 0; const d=await r.json(); const ev=Array.isArray(d)?d[0]:d; const mk=(ev&&ev.markets)||[];
+  const raw={}; let total=0;
+  mk.forEach(m=>{const t=loCanon(m.groupItemTitle); let pr; try{pr=JSON.parse(m.outcomePrices||'[]')}catch(e){pr=[]}
+   if(!t||!pr.length)return; const y=+pr[0]; if(isNaN(y))return; raw[t]=(raw[t]||0)+y; total+=y;});  // de-vig over real teams only
+  const ts=Object.keys(raw); if(total<=0||!ts.length)throw 0;
+  _loData=ts.map(t=>({team:t,market:raw[t]/total})).sort((a,b)=>b.market-a.market);
+  _loTs=Math.floor(Date.now()/1000); _loState='live';
+ }catch(e){_loState='error';}
+ renderLiveOdds();
+}
+function ensureLiveOdds(){renderLiveOdds(); if(!_loInit){_loInit=true; fetchLiveOdds();}}
+function renderLiveOdds(){
+ const el=byId('loBody'); if(!el)return;
+ const live=_loState==='live'&&_loData;
+ let rows=(live?_loData:_loSnapshot()).filter(r=>r.market>=0.004);
+ if(rows.length<10)rows=(live?_loData:_loSnapshot());
+ const max=rows.length?rows[0].market:1;
+ let status;
+ if(_loState==='loading')status='⏳ fetching the live market…';
+ else if(_loState==='live')status=`<span class="lo-live"><span class="lo-dot"></span> Live</span> · updated ${esc(relTime(_loTs))}`;
+ else if(_loState==='error')status=`⚠️ couldn't reach Polymarket — showing the last build's snapshot (${esc(relTime(DATA.generated_epoch))})`;
+ else status=`🗓 last build's snapshot (${esc(relTime(DATA.generated_epoch))}) — open this tab to load live`;
+ const body=rows.map((r,i)=>{const m=_loModel[r.team];const w=Math.max(2,Math.round(100*r.market/max));
+  return `<div class="lo-row"><div class="lo-team"><span class="lo-rank">${i+1}</span>${team(r.team)}</div>`
+   +`<div class="lo-barwrap"><div class="lo-bar" style="width:${w}%"></div></div>`
+   +`<div class="lo-mkt">${pct(r.market)}</div>`
+   +`<div class="lo-mdl" title="our model's championship probability">model ${pct(m)}</div></div>`;}).join('');
+ el.innerHTML=`<div class="lo-status">${status}<button class="rbtn" id="loRefresh"${_loState==='loading'?' disabled':''}>↻ Refresh</button></div><div class="lo-list">${body}</div>`;
+ const rb=byId('loRefresh'); if(rb)rb.onclick=fetchLiveOdds;
+}
+
 buildFollow();renderChanges();renderRoundNav();renderBracket();renderYourTeam();
-renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();
+renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();renderLiveOdds();
 </script></body></html>
