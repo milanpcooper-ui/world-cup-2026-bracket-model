@@ -70,5 +70,23 @@
     "a": "Colombia",
     "hg": 1,
     "ag": 3
+  },
+  {
+    "h": "Czechia",
+    "a": "South Africa",
+    "hg": 1,
+    "ag": 0
+  },
+  {
+    "h": "Switzerland",
+    "a": "Bosnia & Herzegovina",
+    "hg": 1,
+    "ag": 1
+  },
+  {
+    "h": "Canada",
+    "a": "Qatar",
+    "hg": 1,
+    "ag": 1
   }
 ]
