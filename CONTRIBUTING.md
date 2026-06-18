@@ -1,17 +1,20 @@
 # Contributing
 
 Thanks for helping improve the World Cup 2026 predictive bracket! It's a small,
-data-driven model. The live results and odds are already refreshed automatically every 3 hours, so the most useful PRs tend to be **model & calibration improvements, more
-reliable data sources, and UX/accessibility fixes** — though data corrections are always
-welcome. Many changes need no code beyond a JSON edit.
+data-driven model. Live results are refreshed automatically every 3 hours from
+cross-validated sports feeds (`fetch_results.py`; odds are updated manually), so the most
+useful PRs tend to be **model & calibration improvements, more reliable/additional data
+sources, and UX/accessibility fixes** — though data corrections are always welcome. Many
+changes need no code beyond a JSON edit.
 
 ## The three live inputs (no code needed)
 
 `build.py` reads three JSON files each rebuild. Use the exact team names from `data.py`.
 
-- **`results_log.json`** — finished **group-stage** match scores to append, one object each:
-  `{"h": "England", "a": "Croatia", "hg": 2, "ag": 1}`. A kickoff-time gate
-  (`schedule_gate.py`) rejects any score for a game that can't have finished yet (its
+- **`results_log.json`** — finished **group-stage** match scores, one object each:
+  `{"h": "England", "a": "Croatia", "hg": 2, "ag": 1}`. Normally populated automatically by
+  `fetch_results.py` from cross-validated feeds — you rarely edit it by hand. A kickoff-time
+  gate (`schedule_gate.py`) rejects any score for a game that can't have finished yet (its
   scheduled kickoff + ~2.5h hasn't passed) and any cross-group/knockout pairing (the model
   simulates the knockouts; it doesn't ingest their results). If a legitimately-final score is
   rejected, check the kickoff in `data.py` `GROUP_FIXTURES` and your clock.
@@ -53,6 +56,10 @@ Requires Python 3 and NumPy (`pip install numpy`). `build.py` runs ~40k simulati
 - `data.py` — static tournament data (groups, Elo, fixtures, venues, knockout slots).
 - `annexC.txt` — FIFA Annex C third-place allocation table (495 rows).
 - `gen_dashboard.py` — renders `results.json` into the standalone HTML dashboard.
+- `fetch_results.py` — fetches finished results from real feeds (ESPN + TheSportsDB +
+  optional football-data.org), cross-validates them, and appends to `results_log.json`.
+- `schedule_gate.py` — the deterministic kickoff-time gate (shared safety net).
+- `refresh.sh` — the deterministic auto-refresh (`git pull` → `fetch_results.py` → `publish.sh`).
 
 See the README and the dashboard's **Method** tab for the modelling assumptions.
 

@@ -5,38 +5,55 @@ then publish to the live site.
 
 ## Automated rebuilds
 
-During the tournament a scheduled job on the maintainer's machine runs this workflow
-every 3 hours: it pulls the latest finished results and refreshed odds into the JSON
-inputs, then calls `publish.sh`, which rebuilds and pushes to GitHub Pages **only when an
-input actually changed** (fixed RNG seeds mean a no-data rebuild is a no-op, so it never
-spams commits). The Pages site redeploys within ~1 minute.
+During the tournament a scheduled job runs **`refresh.sh`** every 3 hours. It is fully
+deterministic — **no LLM decides results**:
+
+```
+git pull --rebase --autostash  →  python3 fetch_results.py  →  bash publish.sh
+```
+
+`fetch_results.py` reads finished group-stage scores from **real sports feeds and
+cross-validates them** (see below), appending only confirmed results to `results_log.json`.
+`publish.sh` then rebuilds and pushes to GitHub Pages **only when an input actually changed**
+(fixed RNG seeds mean a no-data rebuild is a no-op, so it never spams commits). The Pages site
+redeploys within ~1 minute. Because results come only from feeds that agree with each other —
+never from a model's guess — fabricated scores are structurally impossible.
+
+### How results are validated (`fetch_results.py`)
+For every scheduled group game not already recorded, it queries independent sources and
+ingests a score only when they agree and the game is genuinely final:
+- **ESPN** (primary, no key) — authoritative status (`post`/`FT`/`completed`) + final score,
+  matched by stable FIFA 3-letter team code.
+- **TheSportsDB** (secondary, free) — cross-check.
+- **football-data.org** (optional third) — enabled if `FOOTBALL_DATA_TOKEN` is set.
+
+Policy: **CONFIRMED** (≥2 sources agree → ingest) · **SINGLE** (only the primary is final →
+ingest, flagged; use `--require-two-sources` to require two) · **CONFLICT** (sources disagree
+→ rejected + logged, never ingested; exit 2) · **PENDING** (not final / kickoff+2.5h not
+elapsed → skip, caught next run). Every ingested score must also pass the deterministic
+kickoff-time gate (`schedule_gate.py`). Run `python3 fetch_results.py --dry-run` to preview,
+`--full` to scan the whole group stage (backfill).
 
 ## Updating it manually
 
 From this repo folder:
 
 1. `git pull --rebase` — start from latest.
-2. **Results.** Find every **group-stage** World Cup match that has finished with a final
-   score and isn't already in `results_log.json` / `data.py`. Cross-check each score against
-   a second source (ESPN, CBS Sports, Fox Sports, FIFA). Append each as `{"h","a","hg","ag"}`
-   using the EXACT team names in `data.py` (e.g. "Türkiye", "South Korea", "Côte d'Ivoire",
-   "DR Congo", "Bosnia & Herzegovina", "Curaçao"). Never duplicate one already recorded.
-
-   **Hard rule — only enter a game that has actually been played.** A result is admissible
-   only once its scheduled kickoff (`data.py` `GROUP_FIXTURES`, ET) plus ~2.5h has passed in
-   real time. This is enforced deterministically by a kickoff-time gate (`schedule_gate.py`,
-   used by both `build.py` and `validate_inputs.py`); a premature score is **rejected**, and
-   `publish.sh` **aborts** rather than ship it. The model ingests group-stage results only —
-   knockout rounds are simulated, so a cross-group ("knockout") result is rejected too. If a
-   publish aborts on a rejected result (look for `WC26-PUBLISH-ABORTED`), `publish.sh` reverts
-   the input edits so the next run starts clean; if you edited inputs by hand, run
-   `git checkout -- results_log.json` to clear the rejected entry. **Never invent, guess, or
-   placeholder a score** — if a game isn't finished or sources disagree, skip it.
-3. **Odds (optional).** Refresh `odds.json` (top ~15 title-odds implied probabilities) and
-   `match_odds.json` (1X2 lines for upcoming group games), exact `data.py` names. Leave
-   unchanged if nothing moved.
-4. **Publish:** `bash publish.sh "what changed"` — rebuilds and pushes to GitHub Pages only
-   if an input changed. The build prints a "WHAT CHANGED SINCE LAST BUILD" section.
+2. **Results.** Run `python3 fetch_results.py` (or `bash refresh.sh` to fetch + publish in one
+   step). It appends only feed-validated, genuinely-final group-stage scores — you do not, and
+   should not, type scores in by hand. If you must hand-edit `results_log.json`, the same
+   guardrails apply: a result is admissible only once its scheduled kickoff (`data.py`
+   `GROUP_FIXTURES`, ET) + ~2.5h has passed, and only group-stage (same-group) games are
+   ingested (knockouts are simulated). The kickoff-time gate (`schedule_gate.py`, enforced by
+   `build.py` and `validate_inputs.py`) **rejects** a premature or cross-group score and
+   `publish.sh` **aborts** (prints `WC26-PUBLISH-ABORTED` and reverts the edit). **Never
+   invent or placeholder a score.**
+3. **Odds (optional, manual).** Odds are no longer auto-refreshed. To update calibration, edit
+   `odds.json` (top ~15 title-odds implied probabilities) and/or `match_odds.json` (1X2 lines
+   for upcoming group games), exact `data.py` names. Leave unchanged if nothing moved.
+4. **Publish:** `bash publish.sh "what changed"` — validates inputs, rebuilds, and pushes to
+   GitHub Pages only if an input changed. The build prints a "WHAT CHANGED SINCE LAST BUILD"
+   section.
 
 See `CONTRIBUTING.md` for the exact input formats.
 
@@ -51,8 +68,14 @@ See `CONTRIBUTING.md` for the exact input formats.
 
 ## Files
 - `data.py` `model.py` `annexC.txt` `build.py` `gen_dashboard.py` — the model (don't edit unless you know why).
-- `publish.sh` — rebuild + push to GitHub Pages, only when an input changed.
-- `results_log.json` `odds.json` `match_odds.json` — the three live inputs.
+- `fetch_results.py` — pulls finished group-stage results from real sports feeds and
+  cross-validates them; appends confirmed scores to `results_log.json` (no LLM, no guessing).
+- `schedule_gate.py` — deterministic kickoff-time gate shared by `fetch_results.py`,
+  `build.py`, and `validate_inputs.py`.
+- `refresh.sh` — the deterministic auto-refresh: `git pull` → `fetch_results.py` → `publish.sh`.
+- `publish.sh` — validate inputs, rebuild, push to GitHub Pages, only when an input changed.
+- `results_log.json` `odds.json` `match_odds.json` — the three live inputs (`results_log.json`
+  is now feed-populated; the two odds files are manual).
 - `results.json` — latest computed output (includes a `changes` block vs the prior build).
 - `results_prev.json` — auto-saved snapshot of the previous build, for the diff (gitignored).
 - `index.html` / `World_Cup_2026_Predictor.html` — the dashboard (Pages root + standalone copy); `version.json` powers the "newer build available" banner.
