@@ -188,8 +188,8 @@ def fetch_espn():
             # "final" only for a genuinely-completed match: ESPN's authoritative
             # `completed` flag AND state "post", excluding abandoned/postponed/
             # canceled/suspended terminal states (which can also report state=post).
-            name = (st.get("name") or "").upper()
-            blocked = any(k in name for k in ("ABANDON", "POSTPON", "CANCEL", "SUSPEND", "FORFEIT"))
+            type_name = (st.get("name") or "").upper()
+            blocked = any(k in type_name for k in ("ABANDON", "POSTPON", "CANCEL", "SUSPEND", "FORFEIT"))
             final = bool(st.get("completed")) and st.get("state") == "post" and not blocked
             teams = {}
             for c in comp.get("competitors", []):
