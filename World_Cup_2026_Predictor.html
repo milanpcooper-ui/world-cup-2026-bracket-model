@@ -124,6 +124,9 @@ section.on{display:block}
  padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .rbtn .dot{width:9px;height:9px;border-radius:3px}
 .rbtn.on{color:var(--ink);border-color:var(--bd2);background:var(--panel2)}
+.sortbar{display:flex;align-items:center;gap:9px;margin:0 0 10px;font-size:12.5px;color:var(--mut)}
+.seg{display:inline-flex;gap:7px}
+.seg .rbtn{padding:6px 12px;font-size:12.5px}
 .legend{display:flex;gap:13px;flex-wrap:wrap;align-items:center;margin:2px 0 12px;font-size:12.5px;color:var(--mut)}
 .bracket{display:flex;flex-direction:column;gap:12px}
 .col{display:none;flex-direction:column;gap:11px}
@@ -272,6 +275,13 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 <section id="bracket" class="on">
  <div id="changes" class="changes"></div>
  <div class="roundnav" id="roundnav"></div>
+ <div class="sortbar">
+  <span class="muted">Order</span>
+  <div class="seg" id="sortseg" role="group" aria-label="Match order">
+   <button class="rbtn" type="button" data-sort="date">📅 By date</button>
+   <button class="rbtn" type="button" data-sort="bracket">🗂 Bracket order</button>
+  </div>
+ </div>
  <div class="legend">
   <span class="muted">Tap any match for full odds · the ring shows the chance of that exact matchup · ⭐ = your team's projected box</span>
  </div>
@@ -390,7 +400,26 @@ const RCLASS={R32:'',R16:'r16',QF:'qf',SF:'sf',F:'fin'};
 const RLABEL={R32:'Round of 32',R16:'Round of 16',QF:'Quarterfinals',SF:'Semifinals',F:'Final'};
 const RVAR={R32:'--r32',R16:'--r16',QF:'--qf',SF:'--sf',F:'--fin'};
 function roundKey(no){if(no<89)return'R32';if(no<97)return'R16';if(no<101)return'QF';if(no<103)return'SF';return'F';}
+// chronological sort key from a match's "Jun 28" + "3:00 PM" strings (kickoff order)
+const MONTHS={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function kickoffKey(no){
+ const m=DATA.matches[String(no)];if(!m)return 0;
+ const dm=(m.date||'').match(/([A-Za-z]+)\s+(\d+)/);
+ let k=dm?((MONTHS[dm[1]]??0)*100+(+dm[2]))*10000:0;
+ const tm=(m.time||'').match(/(\d+):(\d+)\s*(AM|PM)/i);
+ if(tm){let h=(+tm[1])%12;if(/pm/i.test(tm[3]))h+=12;k+=h*100+(+tm[2]);}
+ return k;
+}
 let curRound='R32';
+// card order within each round: 'date' (kickoff order, default) or 'bracket' (slot structure)
+let sortMode='date';try{if(localStorage.getItem('wc-sort')==='bracket')sortMode='bracket';}catch(e){}
+// match numbers for a round in the chosen order
+function roundCards(rk){const a=ROUND_ORDER[rk];
+ return sortMode==='date'?a.slice().sort((x,y)=>kickoffKey(x)-kickoffKey(y)):a;}
+function setSortMode(mode){sortMode=mode;try{localStorage.setItem('wc-sort',mode);}catch(e){}
+ renderSortToggle();renderBracket();}
+function renderSortToggle(){document.querySelectorAll('#sortseg .rbtn').forEach(b=>
+ b.classList.toggle('on',b.dataset.sort===sortMode));}
 
 /* team-path helper: most-likely box per round for any team (client-side) */
 function teamObj(name){return DATA.teams.find(t=>t.team===name);}
@@ -515,7 +544,7 @@ function renderBracket(){
  for(const rk of RKS){
   const col=document.createElement('div');col.className='col'+(rk===curRound?' show':'');col.dataset.rk=rk;
   col.innerHTML=`<div class="colhead"><span class="dot" style="background:var(${RVAR[rk]})"></span>${RLABEL[rk]}</div>`
-   +ROUND_ORDER[rk].map(matchCard).join('');
+   +roundCards(rk).map(matchCard).join('');
   brk.appendChild(col);
  }
  const tp=DATA.matches['103'];
@@ -692,6 +721,7 @@ function renderLiveOdds(){
  const rb=byId('loRefresh'); if(rb)rb.onclick=fetchLiveOdds;
 }
 
-buildFollow();renderChanges();renderRoundNav();renderBracket();renderYourTeam();
+document.querySelectorAll('#sortseg .rbtn').forEach(b=>b.onclick=()=>setSortMode(b.dataset.sort));
+buildFollow();renderChanges();renderRoundNav();renderSortToggle();renderBracket();renderYourTeam();
 renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();renderLiveOdds();
 </script></body></html>
