@@ -17,7 +17,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>World Cup 2026 — Predictive Bracket</title>
 <meta name="description" content="Who's most likely to play in each World Cup 2026 knockout game, mapped to host city & date — for ticket & travel planning. Updates every 3 hours during the tournament.">
-<meta name="theme-color" content="#6c5ce7">
+<meta name="theme-color" content="#1f4fd6">
 <meta property="og:type" content="website">
 <meta property="og:title" content="World Cup 2026 — Predictive Bracket">
 <meta property="og:description" content="Who's most likely to play in each knockout game, mapped to host city & date. Market-anchored Monte Carlo, updates every 3 hours.">
@@ -25,83 +25,118 @@ TEMPLATE = r"""<!DOCTYPE html>
 <!-- og:image is absolute when WC_SITE_URL is set at build time; link unfurls (iMessage/Slack/X) need the absolute form. -->
 <meta property="og:image" content="__OGIMAGE__">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
 <script>(function(){try{var t=localStorage.getItem('wc-theme');if(!t)t=(window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
+/* ===== Matchday design tokens — warm paper, one ink-blue, a hot vermilion
+   signal, a cool→hot round arc. Raw color literals live ONLY in these two
+   blocks; everything else routes through a var(). ===== */
 :root{
- --bg:#f3f2ff;--panel:#ffffff;--panel2:#f4f3ff;--ink:#1b1a2e;--mut:#5f5d80;
- --bd:#e8e6fb;--bd2:#cdc8f2;--accent:#6c5ce7;--accent2:#00b894;
- --good:#10b981;--bad:#ec4476;--gold:#f59e0b;
+ --bg:#f4f1ea;--panel:#fffdf8;--panel2:#ece6d9;--ink:#1a1814;--mut:#6b6354;
+ --bd:#e2dccd;--bd2:#cabda6;--accent:#1f4fd6;--accent2:#4a74ec;
+ --good:#1f7a4d;--bad:#c0392f;--gold:#9a6313;
  /* ink = text-on-light variants tuned to clear WCAG AA; flip to bright in dark mode */
- --good-ink:#047857;--bad-ink:#be123c;--gold-ink:#b45309;--teal-ink:#0f766e;--blue-ink:#1d4ed8;
- --r32:#2563eb;--r16:#0891b2;--qf:#7c3aed;--sf:#d97706;--fin:#db2777;
- --track:#d7d1f0;--navon:#efeaff;--navonink:#4c3fc7;
- --grad:linear-gradient(105deg,#6d28d9 0%,#7c3aed 38%,#0e7490 100%);
- --shadow:0 1px 2px rgba(20,18,50,.05),0 10px 30px rgba(76,63,199,.07);
- --overlay:rgba(27,26,46,.42);--engrow:#fdeaf2;
+ --good-ink:#1b6b43;--bad-ink:#a93226;--gold-ink:#7e5012;--teal-ink:#1f4fd6;--blue-ink:#1d4ed8;
+ /* round arc — cool→hot, lands on the signal at the Final */
+ --r32:#2f6bd6;--r16:#5a59d8;--qf:#8b46cf;--sf:#c83e95;--fin:#ee5a37;
+ --track:#e2dccd;--navon:#e7eefc;--navonink:#1a3c97;
+ --grad:linear-gradient(118deg,#1f4fd6 0%,#1c3fae 100%);
+ --shadow:0 1px 1px rgba(26,22,14,.04);
+ --overlay:rgba(26,24,20,.46);--engrow:#e7eefc;
+ /* hot signal — live/now + the Final */
+ --signal:#ee5a37;--signal-ink:#c0432a;--signal-pulse:rgba(238,90,55,.5);
+ /* on-gradient (the blue header field) + on-saturated-fill text */
+ --hero-ink:#fbfaf5;--hero-mut:rgba(255,255,255,.9);--on-fill:#ffffff;
+ --grad-fill:rgba(255,255,255,.16);--grad-fill-2:rgba(255,255,255,.24);
+ --grad-fill-3:rgba(255,255,255,.32);--grad-bd:rgba(255,255,255,.30);
+ /* movement-chip fills: palette hues fixed dark-enough for white text in BOTH themes (AA ≥5:1) */
+ --chip-flip:#c0432a;--chip-res:#1f7a4d;--chip-title:#9a6313;--chip-route:#1f4fd6;--chip-look:#8b46cf;
+ --flag-edge:rgba(0,0,0,.12);
+ /* crisp editorial radii */
+ --r-sm:4px;--r-md:7px;--r-lg:9px;--r-xl:10px;--r-2xl:12px;--r-3xl:16px;--r-pill:999px;
+ /* type roles — Archivo display · IBM Plex Sans body · IBM Plex Mono numbers */
+ --font-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+ --font-sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+ --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+ --font-emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
 }
 html[data-theme="dark"]{
- --bg:#121130;--panel:#1c1a3c;--panel2:#252247;--ink:#f0eeff;--mut:#a3a0c8;
- --bd:#2c2956;--bd2:#494383;--accent:#9b8dff;--accent2:#2ee6b6;
- --good:#34d399;--bad:#ff5d8f;--gold:#fbbf24;
- --good-ink:#34d399;--bad-ink:#ff7da6;--gold-ink:#fbbf24;--teal-ink:#2ee6b6;--blue-ink:#7cb0ff;
- --r32:#60a5fa;--r16:#22d3ee;--qf:#a78bfa;--sf:#fbbf24;--fin:#f472b6;
- --track:#2a2750;--navon:#2c2960;--navonink:#cbc3ff;
- --grad:linear-gradient(105deg,#5b21b6 0%,#6d28d9 40%,#0e7490 100%);
- --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
- --overlay:rgba(4,6,20,.62);--engrow:#33183a;
+ --bg:#14120d;--panel:#1d1a13;--panel2:#26221a;--ink:#f3efe4;--mut:#a39b8a;
+ --bd:#2f2a20;--bd2:#483f2c;--accent:#6f9bff;--accent2:#9bbcff;
+ --good:#3fbf7f;--bad:#ff6b5e;--gold:#dca64a;
+ --good-ink:#3fbf7f;--bad-ink:#ff8a80;--gold-ink:#dca64a;--teal-ink:#6f9bff;--blue-ink:#7cb0ff;
+ --r32:#4f7ee6;--r16:#7b78ec;--qf:#a874e0;--sf:#e06bb0;--fin:#ff7a52;
+ --track:#2f2a20;--navon:#1c2742;--navonink:#9bbcff;
+ --grad:linear-gradient(118deg,#21407f 0%,#18305f 100%);
+ --shadow:0 1px 2px rgba(0,0,0,.4);
+ --overlay:rgba(6,5,2,.62);--engrow:#16213b;
+ --signal:#ff7a52;--signal-ink:#ff8a66;--signal-pulse:rgba(255,122,82,.5);
+ --hero-ink:#f3efe4;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);transition:background .25s,color .25s;
- font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+ font:15px/1.5 var(--font-sans);
  -webkit-text-size-adjust:100%}
 a{color:var(--accent);cursor:pointer;text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* every NUMBER goes mono + tabular so columns align; names/labels stay sans */
+td:not(:first-child),th:not(:first-child),.pc,.ring .pc,.stat .v,.dchip,.lo-mkt,.lo-mdl,.lo-rank{
+ font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+.tcell,.prob .nm,.tm .nm,.stat .l,.step .c{font-family:var(--font-sans)}
+/* big headlines in Archivo display; small eyebrow labels in tracked mono */
+.card h3,.box h3,.gtitle,.chhead .t{font-family:var(--font-display);font-weight:700;letter-spacing:-.01em}
+.colhead,.step .r{font-family:var(--font-mono);letter-spacing:.12em}
 .updatebar{display:flex;align-items:center;gap:12px;justify-content:center;
- flex-wrap:wrap;background:var(--grad);color:#fff;padding:9px 14px;font-size:13.5px;font-weight:600}
+ flex-wrap:wrap;background:var(--grad);color:var(--hero-ink);padding:9px 14px;font-size:13.5px;font-weight:600}
 .updatebar[hidden]{display:none}
-.updatebar button{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);color:#fff;
- border-radius:9px;padding:5px 13px;font-weight:700;cursor:pointer;font-size:13px}
-.updatebar button:hover{background:rgba(255,255,255,.32)}
+.updatebar button{background:var(--grad-fill-2);border:1px solid var(--grad-bd);color:var(--hero-ink);
+ border-radius:var(--r-md);padding:5px 13px;font-weight:700;cursor:pointer;font-size:13px}
+.updatebar button:hover{background:var(--grad-fill-3)}
 .updatebar button.x{padding:4px 9px;background:transparent;border:none;font-size:17px;line-height:1}
 .wrap{max-width:1340px;margin:0 auto;padding:0 14px 96px}
-.fl{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;font-style:normal}
+.fl{font-family:var(--font-emoji);font-style:normal}
+/* SVG flags (flag-icons): a hairline + tiny radius keep edges crisp */
+.fl.fi{border-radius:2px;box-shadow:0 0 0 .5px var(--flag-edge);vertical-align:-.1em}
 
-header{background:var(--grad);color:#fff;border-radius:0 0 20px 20px;margin:0 -14px 14px;
+header{background:var(--grad);color:var(--hero-ink);border-radius:0 0 var(--r-3xl) var(--r-3xl);margin:0 -14px 14px;
  padding:18px 18px 16px;box-shadow:var(--shadow)}
 .htop{display:flex;align-items:center;gap:10px}
-h1{font-size:clamp(18px,4.2vw,25px);margin:0;letter-spacing:.2px;font-weight:800;flex:1;min-width:0}
-.iconbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;
- border-radius:11px;padding:7px 11px;cursor:pointer;font-size:15px;line-height:1}
-.iconbtn:hover{background:rgba(255,255,255,.26)}
+h1{font-family:var(--font-display);font-size:clamp(18px,4.2vw,25px);margin:0;letter-spacing:-.01em;font-weight:800;flex:1;min-width:0}
+.iconbtn{background:var(--grad-fill);border:1px solid var(--grad-bd);color:var(--hero-ink);
+ border-radius:var(--r-md);padding:7px 11px;cursor:pointer;font-size:15px;line-height:1}
+.iconbtn:hover{background:var(--grad-fill-3)}
 .pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-.pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.16);
- border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px 11px;font-size:12px;color:#fff}
-.sub{color:rgba(255,255,255,.92);font-size:13px;margin-top:9px;max-width:780px}
+.pill{display:inline-flex;align-items:center;gap:5px;background:var(--grad-fill);
+ border:1px solid var(--grad-bd);border-radius:var(--r-pill);padding:3px 11px;font-size:12px;color:var(--hero-ink)}
+.sub{color:var(--hero-mut);font-size:13px;margin-top:9px;max-width:780px}
 .follow{display:flex;align-items:center;gap:8px;margin-top:11px;flex-wrap:wrap}
-.follow label{font-size:12.5px;color:rgba(255,255,255,.9)}
-select#followsel{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.34);
- border-radius:10px;padding:6px 9px;font-size:13.5px;font-weight:600;max-width:230px}
-select#followsel option{color:#1b1a2e}
+.follow label{font-size:12.5px;color:var(--hero-mut)}
+select#followsel{background:var(--grad-fill);color:var(--hero-ink);border:1px solid var(--grad-bd);
+ border-radius:var(--r-md);padding:6px 9px;font-size:13.5px;font-weight:600;max-width:230px}
+select#followsel option{color:var(--ink)}
 
 nav{display:flex;gap:7px;overflow-x:auto;padding:2px 0 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
 nav button{background:var(--panel);color:var(--mut);border:1px solid var(--bd);padding:9px 15px;
- border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;flex:none}
+ border-radius:var(--r-md);cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;flex:none}
 nav button.on{background:var(--navon);color:var(--navonink);border-color:transparent}
 section{display:none;margin-top:14px}
 section.on{display:block}
-.card{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:15px;box-shadow:var(--shadow)}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r-2xl);padding:15px;box-shadow:var(--shadow)}
 .muted{color:var(--mut)}
 
 /* movement / what-changed card */
-.changes{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:0;margin-bottom:14px;
+.changes{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r-2xl);padding:0;margin-bottom:14px;
  overflow:hidden;box-shadow:var(--shadow)}
-.chhead{background:linear-gradient(100deg,rgba(108,92,231,.14),rgba(6,182,212,.12));
+.chhead{background:var(--panel2);
  padding:12px 15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .chhead .t{font-weight:800;font-size:15.5px}
 .chhead .since{color:var(--mut);font-size:12px;font-weight:500}
 .chtoggle{margin-left:auto;flex:none;background:transparent;border:1px solid var(--bd);color:var(--mut);
- border-radius:9px;width:28px;height:28px;cursor:pointer;font-size:12px;line-height:1;
+ border-radius:var(--r-md);width:28px;height:28px;cursor:pointer;font-size:12px;line-height:1;
  display:inline-flex;align-items:center;justify-content:center;transition:transform .18s ease,background .18s,color .18s}
 .chtoggle:hover{background:var(--panel2);color:var(--ink)}
 .changes.collapsed .chtoggle{transform:rotate(-90deg)}
@@ -110,10 +145,10 @@ section.on{display:block}
 .crow{padding:9px 0;border-top:1px solid var(--bd);display:flex;gap:11px;align-items:flex-start}
 .crow:first-child{border-top:none}
 .ctag{flex:none;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
- padding:4px 9px;border-radius:8px;color:#fff;white-space:nowrap}
-/* fixed saturated fills — white text clears AA on each, independent of theme */
-.ctag.flip{background:#be185d}.ctag.res{background:#047857}
-.ctag.title{background:#b45309}.ctag.route{background:#1d4ed8}.ctag.look{background:#7c3aed}
+ padding:4px 9px;border-radius:var(--r-sm);color:var(--on-fill);white-space:nowrap}
+/* movement taxonomy — retoned to the round/status palette (design Badge); --on-fill clears AA */
+.ctag.flip{background:var(--chip-flip)}.ctag.res{background:var(--chip-res)}
+.ctag.title{background:var(--chip-title)}.ctag.route{background:var(--chip-route)}.ctag.look{background:var(--chip-look)}
 .cbody{flex:1;min-width:0}
 .mvrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 9px;padding:3px 0}
 .mvrow .where{color:var(--mut);font-size:12.5px;display:inline-flex;gap:9px;flex-wrap:wrap}
@@ -126,7 +161,7 @@ section.on{display:block}
 .why b{color:var(--ink);font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .dchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
- border-radius:999px;padding:3px 9px;border:1px solid var(--bd);background:var(--panel2);color:var(--mut)}
+ border-radius:var(--r-pill);padding:3px 9px;border:1px solid var(--bd);background:var(--panel2);color:var(--mut)}
 .dchip.up{color:var(--good-ink)}.dchip.down{color:var(--bad-ink)}.dchip.res{color:var(--ink)}
 .dchip.reach{border-style:dashed;background:transparent;font-weight:500;font-style:italic;opacity:.85}
 .dchip .fl{font-size:13px}
@@ -134,13 +169,11 @@ section.on{display:block}
 /* bracket */
 .roundnav{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
 .roundnav::-webkit-scrollbar{display:none}
-.rbtn{flex:none;border:1px solid var(--bd);background:var(--panel);color:var(--mut);border-radius:999px;
+.rbtn{flex:none;border:1px solid var(--bd);background:var(--panel);color:var(--mut);border-radius:var(--r-pill);
  padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .rbtn .dot{width:9px;height:9px;border-radius:3px}
 .rbtn.on{color:var(--ink);border-color:var(--bd2);background:var(--panel2)}
-.sortbar{display:flex;align-items:center;gap:9px;margin:0 0 10px;font-size:12.5px;color:var(--mut)}
-.seg{display:inline-flex;gap:7px}
-.seg .rbtn{padding:6px 12px;font-size:12.5px}
+/* (date/bracket order toggle removed — Bracket tab is fixed to date order) */
 .legend{display:flex;gap:13px;flex-wrap:wrap;align-items:center;margin:2px 0 12px;font-size:12.5px;color:var(--mut)}
 .bracket{display:flex;flex-direction:column;gap:12px}
 .col{display:none;flex-direction:column;gap:11px}
@@ -148,7 +181,7 @@ section.on{display:block}
 .colhead{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);font-weight:800;
  display:flex;align-items:center;gap:8px;padding:2px 2px 0}
 .colhead .dot{width:10px;height:10px;border-radius:3px}
-.m{background:var(--panel);border:1px solid var(--bd);border-left:5px solid var(--r32);border-radius:14px;
+.m{background:var(--panel);border:1px solid var(--bd);border-left:6px solid var(--r32);border-radius:var(--r-xl);
  padding:11px 12px;cursor:pointer;transition:transform .1s,box-shadow .12s,border-color .12s;box-shadow:var(--shadow)}
 .m:hover{transform:translateY(-2px);border-color:var(--bd2)}
 .m.r16{border-left-color:var(--r16)}.m.qf{border-left-color:var(--qf)}
@@ -167,15 +200,43 @@ section.on{display:block}
 .ring{flex:none;text-align:center}
 .ring .pc{font-size:12px;font-weight:800;margin-top:-2px}
 .ring .lb{font-size:9.5px;color:var(--mut);letter-spacing:.3px}
-.followtag{display:inline-block;font-size:10px;font-weight:800;color:#fff;background:var(--accent);
- border-radius:6px;padding:2px 7px;margin-top:7px}
+.followtag{display:inline-block;font-size:10px;font-weight:800;color:var(--on-fill);background:var(--chip-route);
+ border-radius:var(--r-sm);padding:2px 7px;margin-top:7px}
+
+/* bracket tree (mirrored, connected) */
+.bt-legend{font-size:12.5px;margin:2px 0 12px;max-width:820px}
+.bt-scroll{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--bd);border-radius:var(--r-2xl);background:var(--panel);box-shadow:var(--shadow);padding:6px}
+.bt-sizer{position:relative;margin:0 auto}
+.bt-canvas{position:relative;transform-origin:top left}
+.bt-svg{position:absolute;inset:0;pointer-events:none;z-index:1}
+.bt-box{position:absolute;background:var(--panel);border:1px solid var(--bd);border-radius:var(--r-xl);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);z-index:2;transition:box-shadow .18s,border-color .18s}
+.bt-box:hover{border-color:var(--bd2)}
+.bt-box.foc{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset,var(--shadow);z-index:4}
+.bt-row{display:flex;align-items:center;gap:6px;padding:0 8px;overflow:hidden}
+.bt-row.div{border-bottom:1px solid var(--bd)}
+.bt-row.lose{opacity:.72}
+.bt-row .fl{font-size:13px;flex:none}
+.bt-nm{font-size:11.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.bt-row.win .bt-nm{font-weight:700;color:var(--ink)}
+.bt-row.lose .bt-nm{font-weight:500;color:var(--mut)}
+.bt-row.foc .bt-nm{font-weight:700;color:var(--accent)}
+.bt-tk{flex:none;width:5px;height:5px;border-radius:50%}
+.bt-star{color:var(--accent);font-size:10px;flex:none}
+.bt-collabel{position:absolute;display:flex;align-items:center;justify-content:center;gap:6px}
+.bt-collabel .dot{width:7px;height:7px;border-radius:2px;flex:none}
+.bt-collabel .lb{font:600 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.bt-champ{position:absolute;text-align:center;z-index:5}
+.bt-champ .cap{font:600 9.5px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.bt-champ .row{display:flex;gap:7px;justify-content:center;align-items:center;margin-top:5px}
+.bt-champ .row .nm{font:900 19px/1 var(--font-display);letter-spacing:-.02em;text-transform:uppercase;color:var(--ink)}
+.bt-champ .pc{font:500 11px/1 var(--font-mono);color:var(--signal-ink);margin-top:4px;font-variant-numeric:tabular-nums}
 
 /* stats + steps (your team) */
 .statrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.stat{background:var(--panel2);border:1px solid var(--bd);border-radius:13px;padding:11px 14px;min-width:104px;flex:1}
+.stat{background:var(--panel2);border:1px solid var(--bd);border-radius:var(--r-lg);padding:11px 14px;min-width:104px;flex:1}
 .stat .v{font-size:21px;font-weight:800}.stat .l{font-size:11.5px;color:var(--mut);margin-top:1px}
 .path{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-top:13px}
-.step{background:var(--panel2);border:1px solid var(--bd);border-radius:13px;padding:12px}
+.step{background:var(--panel2);border:1px solid var(--bd);border-radius:var(--r-lg);padding:12px}
 .step .r{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
 .step .c{font-size:16px;font-weight:800;margin:4px 0}
 .step .d{font-size:12px;color:var(--mut)}
@@ -184,8 +245,8 @@ section.on{display:block}
 
 /* tables */
 .tabletools{display:flex;gap:10px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
-.search{background:var(--panel);border:1px solid var(--bd2);border-radius:11px;color:var(--ink);padding:9px 12px;width:200px;font-size:14px}
-.tblwrap{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:6px;overflow:auto;box-shadow:var(--shadow)}
+.search{background:var(--panel);border:1px solid var(--bd2);border-radius:var(--r-md);color:var(--ink);padding:9px 12px;width:200px;font-size:14px}
+.tblwrap{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r-2xl);padding:6px;overflow:auto;box-shadow:var(--shadow)}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
@@ -206,16 +267,16 @@ tr.foc td{background:var(--engrow)}
 /* modal */
 .modal{position:fixed;inset:0;background:var(--overlay);display:none;align-items:flex-end;justify-content:center;z-index:50}
 .modal.on{display:flex}
-.box{background:var(--panel);border:1px solid var(--bd2);border-radius:20px 20px 0 0;max-width:540px;width:100%;
+.box{background:var(--panel);border:1px solid var(--bd2);border-radius:var(--r-3xl) var(--r-3xl) 0 0;max-width:540px;width:100%;
  padding:20px;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
 .box h3{margin:0 0 2px;font-size:18px}
 .close{float:right;cursor:pointer;color:var(--mut);font-size:24px;line-height:1;background:none;border:none;
- padding:4px 8px;margin:-6px -8px 0 0;min-width:40px;min-height:40px;border-radius:9px}
+ padding:4px 8px;margin:-6px -8px 0 0;min-width:40px;min-height:40px;border-radius:var(--r-md)}
 .close:hover{background:var(--panel2)}
 .prob{display:flex;align-items:center;gap:9px;margin:6px 0}
 .prob .nm{width:150px;display:inline-flex;align-items:center;gap:7px}.prob .nm .fl{font-size:17px}
-.prob .track{flex:1;background:var(--track);border-radius:6px;height:11px;overflow:hidden}
-.prob .fill{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px}
+.prob .track{flex:1;background:var(--track);border-radius:var(--r-pill);height:11px;overflow:hidden}
+.prob .fill{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:var(--r-pill)}
 .prob .pc{width:48px;color:var(--mut);font-size:12.5px;text-align:right}
 .foot{color:var(--mut);font-size:12.5px;margin-top:28px;border-top:1px solid var(--bd);padding-top:14px}
 ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
@@ -228,14 +289,14 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  .colhead{justify-content:center}
  .roundnav{display:none}
  .modal{align-items:center;padding:18px}
- .box{border-radius:20px}
+ .box{border-radius:var(--r-3xl)}
 }
 /* live odds tab */
 .lo-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;
  font-size:13px;color:var(--mut);font-weight:600}
-.lo-live{display:inline-flex;align-items:center;gap:6px;color:var(--good-ink);font-weight:800}
-.lo-dot{width:8px;height:8px;border-radius:50%;background:var(--good);animation:lopulse 1.8s infinite}
-@keyframes lopulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}70%{box-shadow:0 0 0 7px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.lo-live{display:inline-flex;align-items:center;gap:6px;color:var(--signal-ink);font-weight:800}
+.lo-dot{width:8px;height:8px;border-radius:50%;background:var(--signal);animation:lopulse 1.8s infinite}
+@keyframes lopulse{0%{box-shadow:0 0 0 0 var(--signal-pulse)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 .lo-list{display:flex;flex-direction:column}
 .lo-row{display:grid;grid-template-columns:minmax(116px,1.4fr) minmax(70px,3fr) 50px 86px;
  align-items:center;gap:11px;padding:8px 4px;border-bottom:1px solid var(--bd)}
@@ -243,11 +304,11 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 .lo-rank{color:var(--mut);font-size:12px;font-weight:700;width:18px;text-align:right}
 .lo-team{display:flex;align-items:center;gap:7px;font-weight:600;min-width:0}
 .lo-team .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lo-barwrap{background:var(--track);border-radius:999px;height:11px;overflow:hidden}
-.lo-bar{height:100%;background:var(--grad);border-radius:999px;transition:width .45s ease}
+.lo-barwrap{background:var(--track);border-radius:var(--r-pill);height:11px;overflow:hidden}
+.lo-bar{height:100%;background:var(--grad);border-radius:var(--r-pill);transition:width .45s ease}
 .lo-mkt{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
 .lo-mdl{text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--mut)}
-.lo-skel{height:11px;border-radius:999px;background:var(--panel2);
+.lo-skel{height:11px;border-radius:var(--r-pill);background:var(--panel2);
  background-image:linear-gradient(90deg,transparent,var(--track),transparent);
  background-size:200% 100%;animation:loshim 1.2s infinite}
 @keyframes loshim{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -279,6 +340,7 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 
 <nav>
  <button data-t="bracket" class="on">Bracket</button>
+ <button data-t="brackettree">🗂 Bracket tree</button>
  <button data-t="liveodds">📈 Live odds</button>
  <button data-t="yourteam">⭐ Your team</button>
  <button data-t="teams">Teams</button>
@@ -289,18 +351,16 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 <section id="bracket" class="on">
  <div id="changes" class="changes"></div>
  <div class="roundnav" id="roundnav"></div>
- <div class="sortbar">
-  <span class="muted">Order</span>
-  <div class="seg" id="sortseg" role="group" aria-label="Match order">
-   <button class="rbtn" type="button" data-sort="date">📅 By date</button>
-   <button class="rbtn" type="button" data-sort="bracket">🗂 Bracket order</button>
-  </div>
- </div>
  <div class="legend">
   <span class="muted">Tap any match for full odds · the ring shows the chance of that exact matchup · ⭐ = your team's projected box</span>
  </div>
  <div class="bracket" id="brk"></div>
  <div class="card" style="margin-top:12px"><b>🥉 Third-place match</b> <span class="muted" id="tpline"></span></div>
+</section>
+
+<section id="brackettree">
+ <div class="bt-legend muted">The projected knockout tree — the most-likely matchup in each box, connected through to the Final. ⭐ marks your team's path; tap a box to follow its projected winner.</div>
+ <div class="bt-scroll" id="btScroll"><div class="bt-sizer" id="btSizer"><div class="bt-canvas" id="btCanvas"></div></div></div>
 </section>
 
 <section id="liveodds">
@@ -339,7 +399,7 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  </div>
 </section>
 
-<div class="foot">Predictions, not guarantees — early in the group stage the bracket is highly uncertain and shifts with every result. Rebuilt nightly. Not affiliated with FIFA. Flags render as emoji; some desktop browsers show country codes instead.</div>
+<div class="foot">Predictions, not guarantees — early in the group stage the bracket is highly uncertain and shifts with every result. Rebuilt nightly. Not affiliated with FIFA.</div>
 </div>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Details" aria-hidden="true"><div class="box" id="mbox"></div></div>
@@ -350,7 +410,10 @@ const FLAG = {"Mexico":"🇲🇽","South Africa":"🇿🇦","South Korea":"🇰�
 const pct = x => (x==null||isNaN(x) ? '—' : (x*100).toFixed(x>=0.1?0:1)+'%');
 const byId = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const flag = t => `<span class="fl" aria-hidden="true">${FLAG[t]||'🏳️'}</span>`;
+// SVG flags via flag-icons when an ISO code exists (fixes the desktop emoji→country-code
+// fallback); emoji stays as the fallback for any name without one. Decorative (name is adjacent).
+const ISO = {"Mexico":"mx","South Africa":"za","South Korea":"kr","Czechia":"cz","Canada":"ca","Bosnia & Herzegovina":"ba","Qatar":"qa","Switzerland":"ch","Brazil":"br","Morocco":"ma","Haiti":"ht","Scotland":"gb-sct","USA":"us","Paraguay":"py","Australia":"au","Türkiye":"tr","Germany":"de","Curaçao":"cw","Côte d'Ivoire":"ci","Ecuador":"ec","Netherlands":"nl","Japan":"jp","Sweden":"se","Tunisia":"tn","Belgium":"be","Egypt":"eg","Iran":"ir","New Zealand":"nz","Spain":"es","Cape Verde":"cv","Saudi Arabia":"sa","Uruguay":"uy","France":"fr","Senegal":"sn","Iraq":"iq","Norway":"no","Argentina":"ar","Algeria":"dz","Austria":"at","Jordan":"jo","Portugal":"pt","DR Congo":"cd","Uzbekistan":"uz","Colombia":"co","England":"gb-eng","Croatia":"hr","Ghana":"gh","Panama":"pa"};
+const flag = t => ISO[t] ? `<span class="fl fi fi-${ISO[t]}" aria-hidden="true"></span>` : `<span class="fl" aria-hidden="true">${FLAG[t]||'🏳️'}</span>`;
 const team = t => `${flag(t)}<span class="nm">${esc(t)}</span>`;
 let followTeam = DATA.teams.some(t=>t.team==='England') ? 'England' : DATA.teams[0].team;
 
@@ -393,6 +456,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
  b.classList.add('on'); byId(b.dataset.t).classList.add('on');
  if(b.dataset.t==='liveodds') ensureLiveOdds();
+ if(b.dataset.t==='brackettree') btFit();
  window.scrollTo({top:0,behavior:'smooth'});
 });
 
@@ -401,7 +465,7 @@ function buildFollow(){
  const sel=byId('followsel');
  sel.innerHTML=DATA.teams.slice().sort((a,b)=>a.team.localeCompare(b.team))
    .map(t=>`<option value="${esc(t.team)}"${t.team===followTeam?' selected':''}>${FLAG[t.team]||'🏳️'} ${esc(t.team)}</option>`).join('');
- sel.onchange=()=>{followTeam=sel.value;renderBracket();renderYourTeam();renderTeams();};
+ sel.onchange=()=>{followTeam=sel.value;renderBracket();renderBracketTree();renderYourTeam();renderTeams();};
 }
 
 /* round structure */
@@ -425,15 +489,9 @@ function kickoffKey(no){
  return k;
 }
 let curRound='R32';
-// card order within each round: 'date' (kickoff order, default) or 'bracket' (slot structure)
-let sortMode='date';try{if(localStorage.getItem('wc-sort')==='bracket')sortMode='bracket';}catch(e){}
-// match numbers for a round in the chosen order
-function roundCards(rk){const a=ROUND_ORDER[rk];
- return sortMode==='date'?a.slice().sort((x,y)=>kickoffKey(x)-kickoffKey(y)):a;}
-function setSortMode(mode){sortMode=mode;try{localStorage.setItem('wc-sort',mode);}catch(e){}
- renderSortToggle();renderBracket();}
-function renderSortToggle(){document.querySelectorAll('#sortseg .rbtn').forEach(b=>
- b.classList.toggle('on',b.dataset.sort===sortMode));}
+// Bracket tab is fixed to date (kickoff) order — the dedicated Bracket tree tab now carries
+// the slot-structure view. Match numbers for a round, in chronological kickoff order.
+function roundCards(rk){return ROUND_ORDER[rk].slice().sort((x,y)=>kickoffKey(x)-kickoffKey(y));}
 
 /* team-path helper: most-likely box per round for any team (client-side) */
 function teamObj(name){return DATA.teams.find(t=>t.team===name);}
@@ -564,6 +622,97 @@ function renderBracket(){
  const tp=DATA.matches['103'];
  if(tp)byId('tpline').textContent=`${tp.city} · ${tp.date} · ${tp.time} — losing semifinalists.`;
 }
+
+/* ---- BRACKET TREE (mirrored, connected, driven by the real bracket) ---- */
+// follow a team from anywhere (e.g. tapping a tree box); keeps the dropdown in sync
+function setFollow(name){if(!name)return;followTeam=name;const sel=byId('followsel');if(sel)sel.value=name;
+ renderBracket();renderBracketTree();renderYourTeam();renderTeams();}
+const BT={boxW:132,boxH:56,hGap:34,rowUnit:72,leftPad:40,rightPad:40,topPad:96};
+BT.W=BT.leftPad+9*BT.boxW+8*BT.hGap+BT.rightPad;     // 1540
+BT.H=BT.topPad+7.5*BT.rowUnit+BT.boxH/2+40;          // 704
+const btColX=i=>BT.leftPad+BT.boxW/2+i*(BT.boxW+BT.hGap);
+const btRowY=r=>BT.topPad+r*BT.rowUnit;
+const BT_ROWS={r32:[0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5],r16:[1,3,5,7],qf:[2,6],sf:[4],fin:[4]};
+const btTeams=no=>{const m=DATA.matches[String(no)];const tp=m&&m.top_pairs&&m.top_pairs[0];return tp?{a:tp.a,b:tp.b,p:tp.p}:null;};
+// build the 9 columns (mirrored) + parent/child links, all from ROUND_ORDER's bracket order
+function btBuild(){
+ const R=ROUND_ORDER;
+ const def=[['r32',R.R32.slice(0,8),BT_ROWS.r32,'L',0],['r16',R.R16.slice(0,4),BT_ROWS.r16,'L',1],
+  ['qf',R.QF.slice(0,2),BT_ROWS.qf,'L',2],['sf',R.SF.slice(0,1),BT_ROWS.sf,'L',3],
+  ['fin',R.F.slice(0,1),BT_ROWS.fin,'C',4],['sf',R.SF.slice(1,2),BT_ROWS.sf,'R',5],
+  ['qf',R.QF.slice(2,4),BT_ROWS.qf,'R',6],['r16',R.R16.slice(4,8),BT_ROWS.r16,'R',7],
+  ['r32',R.R32.slice(8,16),BT_ROWS.r32,'R',8]];
+ const cb=def.map(([round,nums,rows,side,col])=>nums.map((no,i)=>(
+   {no,round,side,col,idx:i,cx:btColX(col),cy:btRowY(rows[i])})));
+ const boxes=cb.flat(),links=[];
+ const L=(child,parent,side)=>links.push({child,parent,side});
+ const [Lr32,Lr16,Lqf,Lsf,Fin,Rsf,Rqf,Rr16,Rr32]=cb;
+ Lr16.forEach((p,j)=>{L(Lr32[2*j],p,'L');L(Lr32[2*j+1],p,'L');});
+ Lqf.forEach((p,k)=>{L(Lr16[2*k],p,'L');L(Lr16[2*k+1],p,'L');});
+ L(Lqf[0],Lsf[0],'L');L(Lqf[1],Lsf[0],'L');L(Lsf[0],Fin[0],'L');
+ Rr16.forEach((p,j)=>{L(Rr32[2*j],p,'R');L(Rr32[2*j+1],p,'R');});
+ Rqf.forEach((p,k)=>{L(Rr16[2*k],p,'R');L(Rr16[2*k+1],p,'R');});
+ L(Rqf[0],Rsf[0],'R');L(Rqf[1],Rsf[0],'R');L(Rsf[0],Fin[0],'R');
+ return {boxes,links,Fin:Fin[0]};
+}
+function btPath(l){const c=l.child,p=l.parent;
+ if(l.side==='L'){const x1=c.cx+BT.boxW/2,x2=p.cx-BT.boxW/2,mx=(x1+x2)/2;return `M${x1},${c.cy} H${mx} V${p.cy} H${x2}`;}
+ const x1=c.cx-BT.boxW/2,x2=p.cx+BT.boxW/2,mx=(x1+x2)/2;return `M${x1},${c.cy} H${mx} V${p.cy} H${x2}`;}
+function btBoxHtml(b,info){
+ const t=info.teams[b.no],stripe=`var(--${b.round})`,win=info.winner[b.no];
+ const foc=!!t&&(t.a===followTeam||t.b===followTeam);
+ let s=`left:${b.cx-BT.boxW/2}px;top:${b.cy-BT.boxH/2}px;width:${BT.boxW}px;height:${BT.boxH}px;`;
+ if(b.side==='C')s+='border-left:4px solid var(--fin);border-right:4px solid var(--fin);';
+ else if(b.side==='L')s+=`border-left:4px solid ${stripe};`;
+ else s+=`border-right:4px solid ${stripe};`;
+ const rowH=(BT.boxH-1)/2;
+ const row=(nm,div)=>{
+  if(!nm)return `<div class="bt-row lose${div?' div':''}" style="height:${rowH}px"><span class="bt-nm">—</span></div>`;
+  const isFoc=nm===followTeam,isWin=nm===win,cls=isFoc?'foc':(isWin?'win':'lose');
+  const mark=isFoc?'<span class="bt-star">★</span>':(isWin?`<span class="bt-tk" style="background:${stripe}"></span>`:'');
+  return `<div class="bt-row ${cls}${div?' div':''}" style="height:${rowH}px">${flag(nm)}<span class="bt-nm">${esc(nm)}</span>${mark}</div>`;};
+ const inner=t?row(t.a,true)+row(t.b,false):row(null,true)+row(null,false);
+ const fol=t?esc(win||t.a):'';
+ return `<div class="bt-box${foc?' foc':''}" style="${s}"${fol?` data-btfollow="${fol}"`:''}>${inner}</div>`;
+}
+function renderBracketTree(){
+ const canvas=byId('btCanvas');if(!canvas)return;
+ const {boxes,links,Fin}=btBuild();
+ const teams={},winner={};
+ boxes.forEach(b=>{teams[b.no]=btTeams(b.no);});
+ const champObj=DATA.teams.slice().sort((a,b)=>(b.p_champ||0)-(a.p_champ||0))[0];
+ const champ=champObj?champObj.team:null;
+ const teamsOf=no=>{const t=teams[no];return t?[t.a,t.b]:[];};
+ // the projected advancer in each box = the team that also shows up in the parent box's pair
+ links.forEach(l=>{const ct=teams[l.child.no];if(!ct){winner[l.child.no]=null;return;}
+  const pt=teamsOf(l.parent.no);winner[l.child.no]=pt.includes(ct.a)?ct.a:(pt.includes(ct.b)?ct.b:null);});
+ const ft=teams[Fin.no];if(ft)winner[Fin.no]=(ft.a===champ||ft.b===champ)?champ:ft.a;
+ const info={teams,winner};
+ const inFoc=no=>{const t=teams[no];return !!t&&(t.a===followTeam||t.b===followTeam);};
+ const hot=l=>inFoc(l.child.no)&&inFoc(l.parent.no);
+ const champHi=champ===followTeam,spineTop=BT.topPad+44,finalTop=Fin.cy-BT.boxH/2;
+ const svg=`<svg class="bt-svg" width="${BT.W}" height="${BT.H}" viewBox="0 0 ${BT.W} ${BT.H}">`
+  +links.filter(l=>!hot(l)).map(l=>`<path d="${btPath(l)}" fill="none" stroke="var(--bd2)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>`).join('')
+  +`<path d="M${Fin.cx},${spineTop} V${finalTop}" fill="none" stroke="${champHi?'var(--accent)':'var(--bd2)'}" stroke-width="${champHi?2.6:1.4}" stroke-linecap="round"/>`
+  +links.filter(hot).map(l=>`<path d="${btPath(l)}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`).join('')+`</svg>`;
+ const COLDEF=[['R32','Round of 32',0],['R16','Round of 16',1],['QF','Quarterfinal',2],['SF','Semifinal',3],['SF','Semifinal',5],['QF','Quarterfinal',6],['R16','Round of 16',7],['R32','Round of 32',8]];
+ const RVARC={R32:'--r32',R16:'--r16',QF:'--qf',SF:'--sf'};
+ const labels=COLDEF.map(([rk,lab,col])=>`<div class="bt-collabel" style="left:${btColX(col)-BT.boxW/2}px;top:26px;width:${BT.boxW}px"><span class="dot" style="background:var(${RVARC[rk]})"></span><span class="lb">${lab}</span></div>`).join('');
+ const trophy=`<div class="bt-champ" style="left:${BT.W/2-120}px;top:28px;width:240px">`
+  +`<svg width="44" height="48" viewBox="0 0 58 62" style="display:block;margin:0 auto 3px" aria-hidden="true"><path d="M11 6 H47 V18 C47 31 39 37 29 37 C19 37 11 31 11 18 Z" fill="var(--signal)"/><path d="M11 9 C2 9 3 24 15 26" fill="none" stroke="var(--signal)" stroke-width="3.5" stroke-linecap="round"/><path d="M47 9 C56 9 55 24 43 26" fill="none" stroke="var(--signal)" stroke-width="3.5" stroke-linecap="round"/><rect x="26" y="37" width="6" height="11" fill="var(--signal)"/><rect x="17" y="48" width="24" height="5" rx="2" fill="var(--signal)"/><rect x="21" y="54" width="16" height="6" rx="2" fill="var(--signal)"/></svg>`
+  +`<div class="cap">Projected champion</div><div class="row">${champ?flag(champ):''}<span class="nm">${esc(champ||'TBD')}</span></div>`
+  +`<div class="pc">Wins it all · ${champObj?pct(champObj.p_champ):'—'}</div></div>`;
+ canvas.style.width=BT.W+'px';canvas.style.height=BT.H+'px';
+ canvas.innerHTML=svg+labels+trophy+boxes.map(b=>btBoxHtml(b,info)).join('');
+ canvas.querySelectorAll('[data-btfollow]').forEach(el=>el.onclick=()=>setFollow(el.dataset.btfollow));
+ btFit();
+}
+function btFit(){const canvas=byId('btCanvas'),scroll=byId('btScroll'),sizer=byId('btSizer');
+ if(!canvas||!scroll||!sizer)return;
+ let s=(scroll.clientWidth-14)/BT.W; if(s>1)s=1; if(s<0.6||!(s>0))s=0.6;
+ canvas.style.transform='scale('+s+')';
+ sizer.style.width=(BT.W*s)+'px';sizer.style.height=(BT.H*s)+'px';}
+window.addEventListener('resize',()=>{if(byId('btCanvas'))btFit();});
 
 function openMatch(no){
  const m=DATA.matches[String(no)];if(!m)return;
@@ -735,8 +884,7 @@ function renderLiveOdds(){
  const rb=byId('loRefresh'); if(rb)rb.onclick=fetchLiveOdds;
 }
 
-document.querySelectorAll('#sortseg .rbtn').forEach(b=>b.onclick=()=>setSortMode(b.dataset.sort));
-buildFollow();renderChanges();renderRoundNav();renderSortToggle();renderBracket();renderYourTeam();
+buildFollow();renderChanges();renderRoundNav();renderBracket();renderBracketTree();renderYourTeam();
 renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();renderLiveOdds();
 </script></body></html>"""
 
