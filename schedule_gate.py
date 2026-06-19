@@ -16,6 +16,12 @@ score for a game that has not been played yet. Two rules:
      whose game has not finished is rejected — no matter how plausible its
      scoreline looks.
 
+Knockout results are handled by a SEPARATE, equally-strict path: they enter via
+ko_results.json keyed by match number (not a team pair), and ko_result_admissible()
+gates each on that specific knockout match's scheduled kickoff. This is why
+result_admissible() above can keep rejecting every cross-group pair outright — the
+group boundary is never relaxed; knockout ingestion is an independent gate.
+
 Pure Python, no project imports, so this is safe to import from validate_inputs.py
 (which must never execute data.py). Callers supply the schedule structures however
 they obtain them: build.py from `import data`, validate_inputs.py from its static
@@ -79,6 +85,47 @@ def group_fixture_kickoffs(group_fixtures, year=SEASON_YEAR):
         except Exception:
             continue
     return out
+
+
+def knockout_kickoffs(ko_info, year=SEASON_YEAR):
+    """{match_no: kickoff_utc} for every knockout match.
+
+    KO_INFO maps match_no -> (city, date_str, time_str) — note the field order
+    differs from GROUP_FIXTURES (here date/time are positions 1 and 2). A row that
+    fails to parse is skipped. Pure-Python like group_fixture_kickoffs, so
+    validate_inputs.py can build this from a static read of data.py."""
+    out = {}
+    for mno, row in (ko_info or {}).items():
+        try:
+            date_str, time_str = row[1], row[2]
+            out[int(mno)] = parse_kickoff_utc(date_str, time_str, year)
+        except Exception:
+            continue
+    return out
+
+
+def ko_result_admissible(match_no, ko_kickoffs, now_utc,
+                         buffer=MATCH_COMPLETION_BUFFER):
+    """Whether a KNOCKOUT result for `match_no` may be ingested as of `now_utc`.
+
+    Returns (ok: bool, reason: str|None). This is the knockout analog of
+    result_admissible(): a knockout result is admitted only once its scheduled
+    kickoff + completion buffer has passed, so a premature/fabricated late-round
+    score cannot slip through. Knockout results enter through a SEPARATE input
+    (ko_results.json) keyed by match number, so this gate deliberately leaves
+    result_admissible()'s group-stage cross-group rejection untouched — the two
+    paths stay independent and equally strict."""
+    ko = ko_kickoffs.get(int(match_no))
+    if ko is None:
+        return False, (f"match {match_no} has no scheduled kickoff in KO_INFO — "
+                       f"not a knockout fixture this model ingests")
+    ready = ko + buffer
+    if now_utc < ready:
+        return False, (
+            f"knockout match {match_no} kicks off {ko:%b %d %H:%MZ}; not final "
+            f"until ~{ready:%b %d %H:%MZ} (now {now_utc:%b %d %H:%MZ}) — game "
+            f"hasn't been played yet, result not ingestible")
+    return True, None
 
 
 def result_admissible(h, a, group_of, group_kickoffs, now_utc,

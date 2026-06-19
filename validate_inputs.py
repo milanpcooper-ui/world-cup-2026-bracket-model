@@ -127,7 +127,7 @@ def describe():
         print("\nGROUP_FIXTURES: <not a literal the validator can read statically>")
 
     print("\nLive JSON inputs:")
-    for name in ("results_log.json", "odds.json", "match_odds.json"):
+    for name in ("results_log.json", "odds.json", "match_odds.json", "ko_results.json"):
         data = load_json(name)
         if data is None:
             print(f"  {name}: (absent)")
@@ -200,6 +200,47 @@ def main():
                     err(f'{tag}: "{k}" must be a positive number (got {v!r})')
     elif mo is not None:
         err("match_odds.json: must be a JSON array")
+
+    # ko_results.json — played knockout results, keyed by match number. Gated on the
+    # knockout match's scheduled kickoff (the KO analog of the group kickoff gate), so
+    # a premature/fabricated late-round score errors here before publish.sh can commit.
+    kor = load_json("ko_results.json")
+    if isinstance(kor, list):
+        ki = static_value("KO_INFO")
+        ko_kos = SG.knockout_kickoffs(ki) if isinstance(ki, dict) else {}
+        seen_mno = set()
+        for i, e in enumerate(kor):
+            tag = f"ko_results.json[{i}]"
+            if not isinstance(e, dict):
+                err(f"{tag}: must be an object {{match_no, winner, ...}}"); continue
+            for k in ("match_no", "winner"):
+                if k not in e: err(f'{tag}: missing "{k}"')
+            mno = e.get("match_no")
+            # 73–104 are the knockout matches; 103 (third-place playoff) is excluded —
+            # the model never simulates or holds it fixed, so it must not be ingested.
+            valid_mno = (isinstance(mno, int) and not isinstance(mno, bool)
+                         and 73 <= mno <= 104 and mno != 103)
+            if mno is not None and not valid_mno:
+                err(f'{tag}: "match_no" must be an integer in 73–104 (excluding 103, the '
+                    f"unmodeled third-place playoff) (got {mno!r})")
+            if valid_mno:
+                if mno in seen_mno:
+                    warn(f"{tag}: duplicate match_no {mno} — build.py keeps the first")
+                seen_mno.add(mno)
+            check_team(tag, e.get("winner"), teams)
+            for side in ("h", "a"):       # optional, but validated if present
+                if e.get(side) is not None:
+                    check_team(tag, e.get(side), teams)
+            for k in ("hg", "ag"):
+                v = e.get(k)
+                if v is not None and not goal_ok(v):
+                    err(f'{tag}: "{k}" must be a non-negative whole number (got {v!r})')
+            if valid_mno:
+                ok, reason = SG.ko_result_admissible(mno, ko_kos, now_utc)
+                if not ok:
+                    err(f"{tag}: {reason}")
+    elif kor is not None:
+        err("ko_results.json: must be a JSON array")
 
     for w in warnings:
         print(f"warning: {w}")
