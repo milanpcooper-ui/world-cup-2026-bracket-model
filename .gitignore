@@ -10,3 +10,6 @@ results_prev.json
 
 # Private operational runbook (local delivery harness) — never publish
 OPERATIONS.local.md
+
+# Imported Claude Design bundle (working artifact for the re-skin) — never publish
+.design-import/
