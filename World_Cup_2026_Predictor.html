@@ -69,7 +69,7 @@ body{margin:0;background:var(--bg);color:var(--ink);transition:background .25s,c
 a{color:var(--accent);cursor:pointer;text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* every NUMBER goes mono + tabular so columns align; names/labels stay sans */
-td:not(:first-child),th:not(:first-child),.pc,.ring .pc,.stat .v,.dchip,.lo-mkt,.lo-mdl,.lo-rank{
+td:not(:first-child),th:not(:first-child),.pc,.ring .pc,.stat .v,.dchip{
  font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
 .tcell,.prob .nm,.tm .nm,.stat .l,.step .c{font-family:var(--font-sans)}
 /* big headlines in Archivo display; small eyebrow labels in tracked mono */
@@ -277,28 +277,8 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  .modal{align-items:center;padding:18px}
  .box{border-radius:var(--r-3xl)}
 }
-/* live odds tab */
-.lo-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;
- font-size:13px;color:var(--mut);font-weight:600}
-.lo-live{display:inline-flex;align-items:center;gap:6px;color:var(--signal-ink);font-weight:800}
-.lo-dot{width:8px;height:8px;border-radius:50%;background:var(--signal);animation:lopulse 1.8s infinite}
-@keyframes lopulse{0%{box-shadow:0 0 0 0 var(--signal-pulse)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.lo-list{display:flex;flex-direction:column}
-.lo-row{display:grid;grid-template-columns:minmax(116px,1.4fr) minmax(70px,3fr) 50px 86px;
- align-items:center;gap:11px;padding:8px 4px;border-bottom:1px solid var(--bd)}
-.lo-row:last-child{border-bottom:none}
-.lo-rank{color:var(--mut);font-size:12px;font-weight:700;width:18px;text-align:right}
-.lo-team{display:flex;align-items:center;gap:7px;font-weight:600;min-width:0}
-.lo-team .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lo-barwrap{background:var(--track);border-radius:var(--r-pill);height:11px;overflow:hidden}
-.lo-bar{height:100%;background:var(--grad);border-radius:var(--r-pill);transition:width .45s ease}
-.lo-mkt{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
-.lo-mdl{text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--mut)}
-.lo-skel{height:11px;border-radius:var(--r-pill);background:var(--panel2);
- background-image:linear-gradient(90deg,transparent,var(--track),transparent);
- background-size:200% 100%;animation:loshim 1.2s infinite}
-@keyframes loshim{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@media(max-width:540px){.lo-row{grid-template-columns:minmax(104px,1.3fr) 1fr 46px;gap:9px}.lo-mdl{display:none}}
+/* teams table — Polymarket source sub-label on a column header */
+.thsrc{display:block;font-size:10px;font-weight:600;color:var(--signal-ink);letter-spacing:.02em;margin-top:1px}
 </style></head>
 <body>
 <div class="updatebar" id="updatebar" hidden role="status">
@@ -327,7 +307,6 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 <nav>
  <button data-t="bracket" class="on">Bracket</button>
  <button data-t="brackettree">🗂 Bracket tree</button>
- <button data-t="liveodds">📈 Live odds</button>
  <button data-t="yourteam">⭐ Your team</button>
  <button data-t="teams">Teams</button>
  <button data-t="groups">Groups</button>
@@ -349,21 +328,12 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  <div class="bt-scroll" id="btScroll"><div class="bt-sizer" id="btSizer"><div class="bt-canvas" id="btCanvas"></div></div></div>
 </section>
 
-<section id="liveodds">
- <div class="card">
-  <h3 style="margin-top:0">📈 Live title odds — World Cup winner</h3>
-  <div class="muted" style="margin-bottom:13px">The market's live read on who lifts the trophy, straight from the <b>Polymarket</b> prediction market and de-vigged to an implied win probability — the same market the model calibrates to. Fetched live in your browser, with our model's number alongside for comparison.</div>
-  <div id="loBody"></div>
-  <div class="muted" style="margin-top:14px;font-size:12.5px">Source: <a href="https://polymarket.com/event/world-cup-winner" target="_blank" rel="noopener">Polymarket · World Cup Winner ↗</a> · de-vigged across the field · falls back to the last build's snapshot if the market can't be reached.</div>
- </div>
-</section>
-
 <section id="yourteam"><div id="yt"></div></section>
 
 <section id="teams">
  <div class="tabletools">
   <input class="search" id="tsearch" placeholder="🔎 filter team…">
-  <span class="muted">tap a column to sort · tap a team for its match-by-match odds</span>
+  <span class="muted">Champion = <b>Polymarket</b> title odds, de-vigged · refreshed every 3h · tap a column to sort · tap a team for match-by-match odds</span>
  </div>
  <div class="tblwrap"><table id="ttbl"></table></div>
 </section>
@@ -381,7 +351,7 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
   <div class="muted" style="margin-bottom:6px">Scheduled-but-unplayed group games with a betting line are priced directly off the market's 1X2 odds. The model column should match the market by construction.</div>
   <div style="overflow:auto"><table id="mcaltbl"></table></div>
   <h3>Sources</h3>
-  <div class="muted">Groups, fixtures, venues &amp; results: Fox Sports, CBS Sports. Knockout structure &amp; Annex C third-place allocation: FIFA regulations. Elo ratings: worldfootballrankings.com / eloratings.net. Title odds: Kalshi via Covers.com.</div>
+  <div class="muted">Groups, fixtures, venues &amp; results: Fox Sports, CBS Sports. Knockout structure &amp; Annex C third-place allocation: FIFA regulations. Elo ratings: worldfootballrankings.com / eloratings.net. Title odds: Polymarket (de-vigged), refreshed every 3 hours.</div>
  </div>
 </section>
 
@@ -441,7 +411,6 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
  b.classList.add('on'); byId(b.dataset.t).classList.add('on');
- if(b.dataset.t==='liveodds') ensureLiveOdds();
  if(b.dataset.t==='brackettree') btFit();
  window.scrollTo({top:0,behavior:'smooth'});
 });
@@ -760,15 +729,25 @@ function renderYourTeam(){
 }
 
 /* ---- TEAMS ---- */
-let sortKey='p_champ',sortDir=-1;
+// Champion column = Polymarket title odds (de-vigged), refreshed every 3h by the
+// rebuild (odds.json → build.py → calibration.market). Only the ~20 teams Polymarket
+// lists get a value; the rest stay undefined and render as "—". The model's own champ %
+// still appears in Method (calibration table) and each team's popup.
+const PM_CHAMP=Object.fromEntries((DATA.calibration||[]).filter(c=>c&&c.market!=null).map(c=>[c.team,c.market]));
+DATA.teams.forEach(t=>{t.pm_champ=PM_CHAMP[t.team];});
+let sortKey='pm_champ',sortDir=-1;
 const COLS=[['team','Team'],['group','Grp'],['rating','Rtg'],['p_win_group','Win grp'],
  ['p_runner','RU'],['p_advance','Reach R32'],['p_r16','R16'],['p_qf','QF'],['p_sf','SF'],
- ['p_final','Final'],['p_champ','Champion']];
+ ['p_final','Final'],['pm_champ','Champion','Polymarket']];
 function renderTeams(){
  const q=(byId('tsearch').value||'').toLowerCase();
+ // null/undefined (teams Polymarket doesn't list) sort to the bottom; string cols are never null.
  const rows=DATA.teams.filter(t=>t.team.toLowerCase().includes(q))
-  .sort((a,b)=>sortDir*((a[sortKey]>b[sortKey])?1:(a[sortKey]<b[sortKey])?-1:0));
- let h='<tr>'+COLS.map(c=>`<th onclick="setSort('${c[0]}')">${c[1]}${sortKey===c[0]?(sortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr>';
+  .sort((a,b)=>{let x=a[sortKey],y=b[sortKey];if(x==null)x=-Infinity;if(y==null)y=-Infinity;
+   return sortDir*((x>y)?1:(x<y)?-1:0);});
+ let h='<tr>'+COLS.map(c=>{const arr=sortKey===c[0]?(sortDir<0?' ▾':' ▴'):'';
+   const sub=c[2]?`<span class="thsrc">${c[2]}</span>`:'';
+   return `<th onclick="setSort('${c[0]}')">${c[1]}${arr}${sub}</th>`;}).join('')+'</tr>';
  h+=rows.map(t=>{
   const cells=COLS.map(c=>{let v=t[c[0]];
    if(c[0]==='team')return `<td><a class="tlink" data-team="${esc(t.team)}" role="button" tabindex="0"><span class="tcell">${team(t.team)}</span></a></td>`;
@@ -810,7 +789,7 @@ function renderGroups(){
 /* ---- METHOD ---- */
 function renderMethod(){
  byId('asm').innerHTML=DATA.assumptions.map(a=>`<li>${esc(a)}</li>`).join('');
- let h='<tr><th>Team</th><th>Market</th><th>Model</th></tr>';
+ let h='<tr><th>Team</th><th>Polymarket</th><th>Model</th></tr>';
  h+=DATA.calibration.map(c=>`<tr><td><span class="tcell">${team(c.team)}</span></td><td>${pct(c.market)}</td><td>${pct(c.model)}</td></tr>`).join('');
  byId('caltbl').innerHTML=h;
  const mc=DATA.match_calibration||[];const wdl=a=>a.map(x=>pct(x)).join(' / ');
@@ -821,55 +800,6 @@ function renderMethod(){
  } else {byId('mcalhd').style.display='none';byId('mcaltbl').previousElementSibling.style.display='none';byId('mcaltbl').style.display='none';}
 }
 
-/* ---- Live odds (Polymarket, fetched client-side, de-vigged) ---- */
-const PM_SLUG='world-cup-winner';
-const _loNorm=s=>(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-const _PM_ALIAS={'ivory coast':"Côte d'Ivoire",'congo dr':'DR Congo','dr congo':'DR Congo','turkey':'Türkiye',
- 'united states':'USA','korea republic':'South Korea','bosnia and herzegovina':'Bosnia & Herzegovina',
- 'czech republic':'Czechia','cape verde islands':'Cape Verde','curacao':'Curaçao'};
-const _FLAGN={},_ALIASN={};
-Object.keys(FLAG).forEach(t=>{_FLAGN[_loNorm(t)]=t;});
-Object.keys(_PM_ALIAS).forEach(k=>{_ALIASN[_loNorm(k)]=_PM_ALIAS[k];});
-function loCanon(name){const n=_loNorm(name);return _FLAGN[n]||_ALIASN[n]||null;}   // -> canonical team or null
-const _loModel={}; DATA.teams.forEach(t=>{_loModel[t.team]=t.p_champ;});
-let _loData=null,_loTs=null,_loState='idle',_loInit=false;   // state: idle|loading|live|error
-function _loSnapshot(){return (DATA.calibration||[]).filter(c=>c&&c.market!=null)
- .map(c=>({team:c.team,market:c.market})).sort((a,b)=>b.market-a.market);}
-async function fetchLiveOdds(){
- if(_loState==='loading')return; _loState='loading'; renderLiveOdds();
- try{
-  const r=await fetch('https://gamma-api.polymarket.com/events?slug='+PM_SLUG+'&_='+Date.now(),{cache:'no-store'});
-  if(!r.ok)throw 0; const d=await r.json(); const ev=Array.isArray(d)?d[0]:d; const mk=(ev&&ev.markets)||[];
-  const raw={}; let total=0;
-  mk.forEach(m=>{const t=loCanon(m.groupItemTitle); let pr; try{pr=JSON.parse(m.outcomePrices||'[]')}catch(e){pr=[]}
-   if(!t||!pr.length)return; const y=+pr[0]; if(isNaN(y))return; raw[t]=(raw[t]||0)+y; total+=y;});  // de-vig over real teams only
-  const ts=Object.keys(raw); if(total<=0||!ts.length)throw 0;
-  _loData=ts.map(t=>({team:t,market:raw[t]/total})).sort((a,b)=>b.market-a.market);
-  _loTs=Math.floor(Date.now()/1000); _loState='live';
- }catch(e){_loState='error';}
- renderLiveOdds();
-}
-function ensureLiveOdds(){renderLiveOdds(); if(!_loInit){_loInit=true; fetchLiveOdds();}}
-function renderLiveOdds(){
- const el=byId('loBody'); if(!el)return;
- const live=_loState==='live'&&_loData;
- let rows=(live?_loData:_loSnapshot()).filter(r=>r.market>=0.004);
- if(rows.length<10)rows=(live?_loData:_loSnapshot());
- const max=rows.length?rows[0].market:1;
- let status;
- if(_loState==='loading')status='⏳ fetching the live market…';
- else if(_loState==='live')status=`<span class="lo-live"><span class="lo-dot"></span> Live</span> · updated ${esc(relTime(_loTs))}`;
- else if(_loState==='error')status=`⚠️ couldn't reach Polymarket — showing the last build's snapshot (${esc(relTime(DATA.generated_epoch))})`;
- else status=`🗓 last build's snapshot (${esc(relTime(DATA.generated_epoch))}) — open this tab to load live`;
- const body=rows.map((r,i)=>{const m=_loModel[r.team];const w=Math.max(2,Math.round(100*r.market/max));
-  return `<div class="lo-row"><div class="lo-team"><span class="lo-rank">${i+1}</span>${team(r.team)}</div>`
-   +`<div class="lo-barwrap"><div class="lo-bar" style="width:${w}%"></div></div>`
-   +`<div class="lo-mkt">${pct(r.market)}</div>`
-   +`<div class="lo-mdl" title="our model's championship probability">model ${pct(m)}</div></div>`;}).join('');
- el.innerHTML=`<div class="lo-status">${status}<button class="rbtn" id="loRefresh"${_loState==='loading'?' disabled':''}>↻ Refresh</button></div><div class="lo-list">${body}</div>`;
- const rb=byId('loRefresh'); if(rb)rb.onclick=fetchLiveOdds;
-}
-
 buildFollow();renderChanges();renderRoundNav();renderBracket();renderBracketTree();renderYourTeam();
-renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();renderLiveOdds();
+renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();
 </script></body></html>
