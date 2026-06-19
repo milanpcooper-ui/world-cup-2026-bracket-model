@@ -46,6 +46,9 @@ import schedule_gate as SG
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS_LOG = os.path.join(HERE, "results_log.json")
+KO_RESULTS_LOG = os.path.join(HERE, "ko_results.json")   # played knockout winners
+RESULTS_JSON = os.path.join(HERE, "results.json")        # model output (settled bracket)
+KO_CONFIRM = 0.999   # a knockout box's participants are "settled" at this pairing prob
 
 # ESPN FIFA 3-letter code -> data.py canonical team name. Validated against
 # D.TEAM_GROUP at startup, so a typo or a team the feed renames fails loudly
@@ -141,6 +144,8 @@ def _get_json(url, headers=None, timeout=20, retries=2):
 
 GROUP_START = datetime.date(2026, 6, 11)
 GROUP_END = datetime.date(2026, 6, 27)
+KO_END = datetime.date(2026, 7, 19)        # Final; knockouts run Jun 28 – Jul 19
+TOURNAMENT_END = KO_END                     # query window upper bound (groups + KO)
 WINDOW_DAYS = 4  # rolling look-back for steady-state runs
 
 # Set by main(): when True, scan the whole group stage (backfill / first run);
@@ -152,15 +157,15 @@ FULL_SCAN = False
 def _tournament_dates():
     """YYYYMMDD ET date strings to query. A rolling window [today-WINDOW_DAYS,
     today+1] by default (recent finals re-checked every run; anything missed is
-    caught next run), or the full Jun 11–27 group stage when FULL_SCAN is set."""
+    caught next run), or the full Jun 11 – Jul 19 tournament when FULL_SCAN is set."""
     now = datetime.datetime.now(datetime.timezone.utc)
     if FULL_SCAN:
-        lo, hi = GROUP_START, GROUP_END
+        lo, hi = GROUP_START, TOURNAMENT_END
     else:
         # "today" in US Eastern (the schedule's reference clock).
         today_et = (now - datetime.timedelta(hours=4)).date()
         lo = max(GROUP_START, today_et - datetime.timedelta(days=WINDOW_DAYS))
-        hi = min(GROUP_END, today_et + datetime.timedelta(days=1))
+        hi = min(TOURNAMENT_END, today_et + datetime.timedelta(days=1))
     out, d = set(), lo
     while d <= hi:
         out.add(d.strftime("%Y%m%d"))
@@ -191,7 +196,7 @@ def fetch_espn():
             type_name = (st.get("name") or "").upper()
             blocked = any(k in type_name for k in ("ABANDON", "POSTPON", "CANCEL", "SUSPEND", "FORFEIT"))
             final = bool(st.get("completed")) and st.get("state") == "post" and not blocked
-            teams = {}
+            teams = {}; winner = None
             for c in comp.get("competitors", []):
                 code = (c.get("team") or {}).get("abbreviation")
                 canon = FIFA_TO_CANON.get(code)
@@ -200,13 +205,18 @@ def fetch_espn():
                 except (TypeError, ValueError):
                     goals = None
                 teams[c.get("homeAway")] = (canon, goals)
+                # ESPN flags the advancing side; for a knockout this is the only
+                # reliable winner when a level game is decided on penalties.
+                if c.get("winner") and canon:
+                    winner = canon
             h, a = teams.get("home"), teams.get("away")
             if not h or not a or h[0] is None or a[0] is None:
                 continue
             if final and (h[1] is None or a[1] is None):
                 continue
             out[frozenset((h[0], a[0]))] = {
-                "h": h[0], "a": a[0], "hg": h[1], "ag": a[1], "final": final}
+                "h": h[0], "a": a[0], "hg": h[1], "ag": a[1], "final": final,
+                "winner": winner}
     return out, name
 
 
@@ -434,6 +444,151 @@ def append_results(to_ingest):
     return added
 
 
+# ---------------------------------------------------------------------------
+# KNOCKOUT RESULTS — keyed by bracket match number, ingested through a path that
+# mirrors the group cross-validation + kickoff gate. Knockout participants are
+# bracket-derived (not a pre-known fixture list), so a played KO game is matched to
+# its FIFA match number via the model's own settled bracket in results.json, where a
+# resolved box has top_pairs[0].p ~ 1. This reuses the model's deterministic Annex C
+# / standings resolution instead of re-deriving it here, and it cascades round by
+# round as earlier winners are ingested and the model rebuilds.
+# ---------------------------------------------------------------------------
+def _ko_settled_map():
+    """({frozenset({a,b}): match_no}, {match_no: winner}) from the latest
+    results.json: the first is settled (participants-known) knockout boxes by team
+    pair; the second is knockout winners already published. ({}, {}) if results.json
+    is absent/unreadable (e.g. the very first build)."""
+    if not os.path.exists(RESULTS_JSON):
+        return {}, {}
+    try:
+        res = json.load(open(RESULTS_JSON))
+    except Exception:
+        return {}, {}
+    pair_to_mno, recorded = {}, {}
+    for mno_s, m in (res.get("matches") or {}).items():
+        try:
+            mno = int(mno_s)
+        except (TypeError, ValueError):
+            continue
+        if m.get("winner"):
+            recorded[mno] = m["winner"]
+        tp = m.get("top_pairs") or []
+        if not tp:
+            continue
+        p0 = tp[0]
+        if (p0.get("p") or 0) < KO_CONFIRM:
+            continue
+        a, b = p0.get("a"), p0.get("b")
+        if a and b:
+            pair_to_mno[frozenset((a, b))] = mno
+    return pair_to_mno, recorded
+
+
+def reconcile_ko(require_two_sources=False):
+    """Resolve FINAL knockout games to bracket match numbers and decide which to
+    ingest. Returns (to_ingest, conflicts, pending).
+
+    Mirrors reconcile()'s CONFIRMED/SINGLE cross-validation and adds the knockout
+    kickoff gate, but keys by match number (resolved from the settled bracket in
+    results.json). The winner identity comes from a source's explicit advancer flag
+    (ESPN sets it, covering penalty wins where the score is level); a goal-derived
+    winner is only a fallback for a decisive scoreline. Returns early — before any
+    network call — until at least one knockout box is settled, so it is a true no-op
+    during the group stage."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    ko_kos = SG.knockout_kickoffs(D.KO_INFO)
+    pair_to_mno, recorded = _ko_settled_map()
+    if not pair_to_mno:
+        return [], [], []   # no settled knockout boxes to map onto yet
+
+    # already-published winners (results.json) plus anything already in the KO log,
+    # so a result isn't re-processed between ingestion and the next rebuild.
+    recorded = dict(recorded)
+    if os.path.exists(KO_RESULTS_LOG):
+        try:
+            for e in json.load(open(KO_RESULTS_LOG)):
+                if "match_no" in e:
+                    recorded[int(e["match_no"])] = e.get("winner")
+        except Exception:
+            pass
+
+    source_data = {}
+    for fn in SOURCES:
+        res, sname = fn()
+        if isinstance(res, dict):
+            source_data[sname] = res
+
+    to_ingest, conflicts, pending = [], [], []
+    for key, mno in pair_to_mno.items():
+        if mno in recorded:                  # winner already known — nothing to do
+            continue
+        names = set(key)
+        finals = {s: g for s, g in ((s, src.get(key)) for s, src in source_data.items())
+                  if g and g.get("final")}
+        if not finals:
+            pending.append(mno); continue
+        # Derive EACH source's implied winner independently and cross-check them,
+        # mirroring the group path's all-source consensus (reconcile() compares every
+        # source's score, not just the primary's). A source votes via its explicit
+        # advancer flag (ESPN; covers penalties) or, failing that, a decisive 90'/120'
+        # scoreline. A level score with no flag is "no opinion" (a shootout we can't
+        # read), not a vote for anyone.
+        opinions = {}   # source -> winner team (restricted to this pairing's two teams)
+        for sname, g in finals.items():
+            if g.get("winner") in names:
+                opinions[sname] = g["winner"]
+            elif g.get("hg") is not None and g.get("ag") is not None and g["hg"] != g["ag"]:
+                w = g["h"] if g["hg"] > g["ag"] else g["a"]
+                if w in names:
+                    opinions[sname] = w
+        voted = set(opinions.values())
+        if len(voted) > 1:                   # sources disagree on who advanced
+            conflicts.append({"match_no": mno, "teams": sorted(names),
+                              "winners": sorted(voted), "kind": "ko_winner_disagree"})
+            continue
+        if len(voted) != 1:                  # final but winner not yet resolvable
+            pending.append(mno); continue
+        winner = voted.pop()
+        # CONFIRMED only when >=2 sources AGREE on the winner (not merely report final).
+        confirmed = len(opinions) >= 2
+        if not confirmed and (require_two_sources or PRIMARY not in opinions):
+            pending.append(mno); continue
+        ok, _reason = SG.ko_result_admissible(mno, ko_kos, now)
+        if not ok:
+            pending.append(mno); continue
+        g = finals.get(PRIMARY) or next(iter(finals.values()))
+        to_ingest.append({"match_no": mno, "winner": winner, "h": g["h"], "a": g["a"],
+                          "hg": g["hg"], "ag": g["ag"],
+                          "sources": sorted(finals), "confirmed": confirmed})
+    return to_ingest, conflicts, pending
+
+
+def append_ko_results(to_ingest):
+    """Append confirmed knockout results to ko_results.json (deduped by match_no)."""
+    log = []
+    if os.path.exists(KO_RESULTS_LOG):
+        try:
+            log = json.load(open(KO_RESULTS_LOG))
+        except Exception:
+            log = []
+    have = {e.get("match_no") for e in log}
+    added = 0
+    for r in to_ingest:
+        if r["match_no"] in have:
+            continue
+        log.append({"match_no": int(r["match_no"]), "winner": r["winner"],
+                    "h": r["h"], "a": r["a"],
+                    "hg": int(r["hg"]) if r["hg"] is not None else None,
+                    "ag": int(r["ag"]) if r["ag"] is not None else None})
+        have.add(r["match_no"])
+        added += 1
+    if added:
+        with open(KO_RESULTS_LOG, "w") as f:
+            json.dump(log, f, indent=2)
+            f.write("\n")
+    return added
+
+
 def main(argv):
     global FULL_SCAN
     dry = "--dry-run" in argv
@@ -491,9 +646,35 @@ def main(argv):
     elif dry:
         print("\n(dry-run — nothing written)")
 
+    # ---- KNOCKOUT results (separate input, keyed by bracket match number) ----
+    # No-op during the group stage (reconcile_ko returns before any fetch until a
+    # knockout box is settled in results.json).
+    ko_ingest, ko_conflicts, ko_pending = reconcile_ko(require_two_sources=require_two)
+    if ko_conflicts:
+        print(f"\n⚠️  WC26-RESULT-CONFLICT — {len(ko_conflicts)} knockout conflict(s), "
+              f"NOT ingested, review:")
+        for c in ko_conflicts:
+            print(f"    M{c['match_no']} {' vs '.join(c['teams'])}: sources disagree on the "
+                  f"advancer ({', '.join(c['winners'])})")
+    if ko_ingest:
+        ko_single = [r for r in ko_ingest if not r["confirmed"]]
+        print(f"\n{'Would ingest' if dry else 'Ingesting'} {len(ko_ingest)} knockout result(s):")
+        for r in ko_ingest:
+            tag = "CONFIRMED" if r["confirmed"] else f"SINGLE({r['sources'][0]})"
+            sc = (f"{r['hg']}-{r['ag']} " if r['hg'] is not None and r['ag'] is not None else "")
+            print(f"    M{r['match_no']} {r['h']} {sc}{r['a']} → {r['winner']} advances  [{tag}]")
+        if ko_single and not dry:
+            print(f"⚠️  {len(ko_single)} knockout result(s) from a SINGLE source ({PRIMARY}) "
+                  f"— not cross-validated; spot-check if a second feed stays down.")
+        if not dry:
+            n_ko = append_ko_results(ko_ingest)
+            print(f"Appended {n_ko} knockout result(s) to ko_results.json.")
+    elif dry:
+        print("(dry-run — no knockout results written)")
+
     # exit 2 signals a conflict for the caller to alert on; results are still safe
     # (conflicts are never ingested), so this does not block a publish of the rest.
-    return 2 if conflicts else 0
+    return 2 if (conflicts or ko_conflicts) else 0
 
 
 if __name__ == "__main__":

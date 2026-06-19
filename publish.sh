@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-INPUTS="results_log.json odds.json match_odds.json"
+INPUTS="results_log.json odds.json match_odds.json ko_results.json"
 OUTPUTS="results.json version.json index.html World_Cup_2026_Predictor.html"
 
 if git diff --quiet -- $INPUTS; then

@@ -12,7 +12,7 @@ simulated title probabilities match the betting market's top teams (Kalshi/Cover
 13 Jun 2026). This anchors the model on the market, per the brief, while Elo gives
 discrimination across the full 48-team field.
 """
-import os, itertools
+import os, itertools, math
 import numpy as np
 import data as D
 
@@ -86,6 +86,21 @@ def poisson_lambdas(elo_a, elo_b, total, spread):
     lb = np.clip(total / 2 - sup / 2, 0.18, 6.0)
     return la, lb
 
+def _pois_inv(u, lam):
+    """Poisson(lam) sample from a SINGLE uniform u in [0,1) via inverse-CDF.
+
+    Distributionally identical to np.random.poisson(lam), but consumes exactly one RNG
+    value regardless of lam — so conditioning a played knockout (forcing a winner, which
+    changes downstream matchups' lambdas) cannot change how much randomness later matches
+    or sims draw. That stream isolation is what keeps an ingested knockout result from
+    perturbing UNRELATED bracket boxes (np.poisson consumes a lam-dependent number of
+    values, which would). The k<60 cap is unreachable for lam<=6 (clipped) — match goal
+    counts never approach it — and just bounds the loop."""
+    p = math.exp(-lam); cdf = p; k = 0
+    while u > cdf and k < 60:
+        k += 1; p *= lam / k; cdf += p
+    return k
+
 # ---------------------------------------------------------------------------
 # Market 1X2 -> Poisson means. Lets a scheduled game be priced directly off the
 # betting market instead of the Elo gap (a second calibration input).
@@ -135,9 +150,14 @@ def base_ratings():
     teams = D.ALL_TEAMS
     return np.array([eff_elo(t) for t in teams], dtype=float)
 
-def simulate(n_sims, spread, rng, ratings=None, collect=False):
+def simulate(n_sims, spread, rng, ratings=None, collect=False, ko_results=None):
     """Run n_sims tournaments. Returns dict of tallies.
-    `ratings` = optional np array (len = #teams) of effective Elo to use."""
+    `ratings` = optional np array (len = #teams) of effective Elo to use.
+    `ko_results` = optional {match_no: winner_team_name} for knockout matches that
+    have actually been played; each is held FIXED across every sim (the knockout
+    analog of a fixed group score), so downstream rounds and all probabilities stay
+    consistent with reality. See the per-sim loop for the determinism-preserving
+    override (the would-be simulated winner is still drawn, then discarded)."""
     teams = D.ALL_TEAMS
     tidx = {t: i for i, t in enumerate(teams)}
     NT = len(teams)
@@ -246,17 +266,31 @@ def simulate(n_sims, spread, rng, ratings=None, collect=False):
 
     def ko_winner(a, b, s_elo_a, s_elo_b, rng2):
         la, lb = poisson_lambdas(s_elo_a, s_elo_b, TOTAL_KO, spread)
-        ga = rng2.poisson(la); gb = rng2.poisson(lb)
+        # Draw goals via inverse-CDF from ONE uniform each, and ALWAYS draw the
+        # ET/penalty tiebreak. Every ko_winner call therefore consumes EXACTLY three
+        # rng values regardless of the matchup's lambdas. (np.random.poisson consumes a
+        # VARIABLE number of underlying values depending on lambda, so a conditioned
+        # downstream matchup would otherwise shift the shared stream and silently
+        # perturb unrelated matches in other sims.) Inverse-CDF is distributionally
+        # identical to Poisson; this is a one-time renumber vs the np.poisson version.
+        ga = _pois_inv(rng2.random(), la)
+        gb = _pois_inv(rng2.random(), lb)
+        p = 1.0 / (1.0 + 10 ** (-(s_elo_a - s_elo_b) / 400.0))
+        r = rng2.random()
         if ga > gb: return a
         if gb > ga: return b
-        # ET/pens via Elo logistic
-        p = 1.0 / (1.0 + 10 ** (-(s_elo_a - s_elo_b) / 400.0))
-        return a if rng2.random() < p else b
+        return a if r < p else b   # ET/pens via Elo logistic
 
     elo_arr = ratings
 
     # localize for speed
     rngp = rng.poisson; rngr = rng.random
+    # Knockout matches with a real, played result are held fixed across every sim.
+    # Map winner names -> team index once. ko_winner is still CALLED for a forced
+    # match and consumes a FIXED number of RNG values (see its body), so overriding
+    # the winner shifts only that match's genuine downstream — never the draw stream
+    # for unrelated matches in other sims. An empty ko_results forces nothing.
+    forced = {int(m): tidx[t] for m, t in (ko_results or {}).items() if t in tidx}
     for s in range(n_sims):
         thirds_set = top8_sets[s]
         assign = ANNEXC.get(frozenset(thirds_set))
@@ -281,30 +315,43 @@ def simulate(n_sims, spread, rng, ratings=None, collect=False):
             occ[mno][ta] += 1; occ[mno][tb] += 1; _pair(mno, ta, tb)
             reach["R32"][ta] += 1; reach["R32"][tb] += 1
             w = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            fw = forced.get(mno)
+            if fw is not None and (fw == ta or fw == tb): w = fw
             res[mno] = w
         # R16
         for mno, (f1, f2) in D.R16.items():
             ta, tb = res[f1], res[f2]
             occ[mno][ta] += 1; occ[mno][tb] += 1; _pair(mno, ta, tb)
             reach["R16"][ta] += 1; reach["R16"][tb] += 1
-            res[mno] = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            w = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            fw = forced.get(mno)
+            if fw is not None and (fw == ta or fw == tb): w = fw
+            res[mno] = w
         # QF
         for mno, (f1, f2) in D.QF.items():
             ta, tb = res[f1], res[f2]
             occ[mno][ta] += 1; occ[mno][tb] += 1; _pair(mno, ta, tb)
             reach["QF"][ta] += 1; reach["QF"][tb] += 1
-            res[mno] = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            w = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            fw = forced.get(mno)
+            if fw is not None and (fw == ta or fw == tb): w = fw
+            res[mno] = w
         # SF
         for mno, (f1, f2) in D.SF.items():
             ta, tb = res[f1], res[f2]
             occ[mno][ta] += 1; occ[mno][tb] += 1; _pair(mno, ta, tb)
             reach["SF"][ta] += 1; reach["SF"][tb] += 1
-            res[mno] = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            w = ko_winner(ta, tb, elo_arr[ta], elo_arr[tb], rng)
+            fw = forced.get(mno)
+            if fw is not None and (fw == ta or fw == tb): w = fw
+            res[mno] = w
         # Final + third place
         fa, fb = res[101], res[102]
         occ[104][fa] += 1; occ[104][fb] += 1; _pair(104, fa, fb)
         reach["FINAL"][fa] += 1; reach["FINAL"][fb] += 1
         champ = ko_winner(fa, fb, elo_arr[fa], elo_arr[fb], rng)
+        fw = forced.get(104)
+        if fw is not None and (fw == fa or fw == fb): champ = fw
         reach["WIN"][champ] += 1
 
     return {"occ": occ, "reach": reach, "finish": finish, "pairs": pairs,

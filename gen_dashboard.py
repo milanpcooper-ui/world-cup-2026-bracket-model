@@ -293,6 +293,59 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 }
 /* teams table — Polymarket source sub-label on a column header */
 .thsrc{display:block;font-size:10px;font-weight:600;color:var(--signal-ink);letter-spacing:.02em;margin-top:1px}
+
+/* ===== PICK'EM — you vs the model (R32 winners, difficulty-weighted) ===== */
+.pe-head{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r-2xl);padding:14px 15px;box-shadow:var(--shadow);margin-bottom:14px}
+.pe-head h3{font-family:var(--font-display);font-weight:800;font-size:17px;margin:0 0 3px;letter-spacing:-.01em}
+.pe-head .pe-sub{color:var(--mut);font-size:12.5px;line-height:1.5}
+.pe-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.pe-tile{background:var(--panel2);border-radius:var(--r-lg);padding:9px 8px;text-align:center}
+.pe-tile.lead{background:var(--navon)}
+.pe-tile .l{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+.pe-tile.lead .l{color:var(--navonink)}
+.pe-tile .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums;font-weight:600;font-size:22px;line-height:1.1;margin-top:2px}
+.pe-tile .s{font-size:10px;color:var(--mut)}
+.pe-note{margin-top:11px;font-size:12px;color:var(--mut);background:var(--panel2);border-radius:var(--r-md);padding:9px 11px;line-height:1.55}
+.pe-note b{color:var(--ink);font-weight:700}
+.pe-actions{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.pe-btn{border:1px solid var(--bd);background:var(--panel);color:var(--ink);border-radius:var(--r-md);padding:9px 13px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.pe-btn.primary{flex:1;min-width:160px;background:var(--accent);color:var(--on-fill);border-color:transparent}
+.pe-btn.primary[disabled]{background:var(--bd2);color:var(--mut);cursor:default}
+.pe-secl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:16px 2px 9px}
+.pe-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.pe-m{position:relative;background:var(--panel);border:1px solid var(--bd);border-left:4px solid var(--r32);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:10px 12px 11px}
+.pe-meta{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10.5px;color:var(--mut);margin-bottom:7px}
+.pe-meta .dot{opacity:.5}
+.pe-tag{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:var(--r-pill);color:var(--on-fill);background:var(--signal)}
+.pe-tag.flat{background:var(--chip-route)}
+.pe-row{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:var(--r-md);padding:7px 8px;cursor:pointer;font:inherit;color:var(--ink)}
+.pe-row+.pe-row{margin-top:3px}
+.pe-row:hover{background:var(--panel2)}
+.pe-row.sel{background:var(--navon);border-color:var(--accent)}
+.pe-row.won{background:var(--engrow)}
+.pe-row .nm{font-weight:600;font-size:14px}
+.pe-mp{font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);border:1px solid var(--bd2);border-radius:var(--r-sm);padding:1px 4px;margin-left:7px}
+.pe-sp{flex:1}
+.pe-pct{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums;font-size:12px;color:var(--mut);min-width:36px;text-align:right}
+.pe-pts{font-family:var(--font-mono);font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:var(--r-sm)}
+.pe-pts.t1{background:var(--panel2);color:var(--mut)}
+.pe-pts.t2{background:var(--panel2);color:var(--gold-ink)}
+.pe-pts.t3{background:var(--panel2);color:var(--signal-ink)}
+.pe-ck{width:19px;height:19px;border-radius:var(--r-pill);border:1.6px solid var(--bd2);display:flex;align-items:center;justify-content:center;color:var(--on-fill);font-size:11px;flex:none}
+.pe-row.sel .pe-ck{background:var(--accent);border-color:var(--accent)}
+.pe-drop{font-size:11.5px;color:var(--signal-ink);margin-top:8px;line-height:1.45}
+.pe-res{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pe-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-pill);border:1px solid var(--bd)}
+.pe-chip b{font-family:var(--font-mono)}
+.pe-chip.win{color:var(--good-ink)}
+.pe-chip.loss{color:var(--bad-ink)}
+.pe-m.forming{border-left-style:dashed;border-left-color:var(--bd2);background:var(--panel)}
+.pe-lock{margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);background:var(--panel2);border-radius:var(--r-pill);padding:2px 8px}
+.pe-slot{font-weight:700;font-size:13.5px;margin:3px 0 5px;color:var(--ink)}
+.pe-proj{font-size:12.5px;color:var(--ink);line-height:1.7}
+.pe-proj b{font-weight:600}
+.pe-forming-note{font-size:11.5px;color:var(--mut);margin-top:7px}
+@media(min-width:920px){.pe-grid{grid-template-columns:1fr 1fr}}
 </style></head>
 <body>
 <div class="updatebar" id="updatebar" hidden role="status">
@@ -321,6 +374,7 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
 <nav>
  <button data-t="bracket" class="on">Bracket</button>
  <button data-t="brackettree">🗂 Bracket tree</button>
+ <button data-t="pickem">🎯 Pick'em</button>
  <button data-t="yourteam">⭐ Your team</button>
  <button data-t="teams">Teams</button>
  <button data-t="groups">Groups</button>
@@ -341,6 +395,8 @@ ul.asm{padding-left:18px}ul.asm li{margin:6px 0}
  <div class="bt-legend muted">The projected knockout tree — the most-likely matchup in each box, connected through to the Final. ⭐ marks your team's path; tap a box to follow its projected winner.</div>
  <div class="bt-scroll" id="btScroll"><div class="bt-sizer" id="btSizer"><div class="bt-canvas" id="btCanvas"></div></div></div>
 </section>
+
+<section id="pickem"><div id="pe"></div></section>
 
 <section id="yourteam"><div id="yt"></div></section>
 
@@ -426,6 +482,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
  b.classList.add('on'); byId(b.dataset.t).classList.add('on');
  if(b.dataset.t==='brackettree') btFit();
+ if(b.dataset.t==='pickem') renderPickem();
  window.scrollTo({top:0,behavior:'smooth'});
 });
 
@@ -814,8 +871,137 @@ function renderMethod(){
  } else {byId('mcalhd').style.display='none';byId('mcaltbl').previousElementSibling.style.display='none';byId('mcaltbl').style.display='none';}
 }
 
+/* ---- PICK'EM: you vs the model (Round of 32 winners, difficulty-weighted) ---- */
+// The knockout matchups aren't fixed yet (group stage), so each box uses the model's
+// most-likely projected pairing (top_pairs[0]) — the same source as the Bracket Tree.
+// Head-to-head win odds come from the teams' market-anchored ratings via the engine's
+// Elo-logistic (the documented knockout-tie resolver) — no fabricated numbers.
+const PE_KEY='wc-pickem';
+// a box only becomes pickable once group results make its matchup mathematically certain
+// (the model puts ~all probability mass on one pairing). Until then it's a locked teaser.
+// Matches the pipeline's KO_CONFIRM (fetch_results.py) so a box the feed treats as settled
+// is never shown as still "forming" here. A played box (winner published) always opens too.
+const PE_CONFIRM=0.999;
+const peRating=(()=>{const m={};DATA.teams.forEach(t=>{m[t.team]=t.rating;});return m;})();
+function peWin(a,b){const ra=peRating[a],rb=peRating[b];
+ if(ra==null||rb==null)return 0.5;return 1/(1+Math.pow(10,-(ra-rb)/400));}
+// difficulty points: the longer the odds on your pick, the more it banks
+function pePts(p){if(p>=0.70)return 1;if(p>=0.55)return 2;if(p>=0.45)return 3;if(p>=0.30)return 4;return 5;}
+function pePtsCls(n){return n<=2?'t1':(n===3?'t2':'t3');}
+// projected pairing for a box, model's favorite first
+function pePair(no){const m=DATA.matches[String(no)];const tp=m&&m.top_pairs&&m.top_pairs[0];
+ if(!tp)return null;const pa=peWin(tp.a,tp.b);
+ const o=pa>=0.5?{fav:tp.a,dog:tp.b,pFav:pa}:{fav:tp.b,dog:tp.a,pFav:1-pa};
+ o.pPair=tp.p;return o;}                              // pPair = chance this exact matchup occurs
+// the actual winner of a knockout box, once the data carries one. None today (no KO games
+// played) → null. Single wiring point for live scoring when results.json gains KO results.
+function peResult(no){const m=DATA.matches[String(no)];return (m&&m.winner)?m.winner:null;}
+
+let pePicks={},peFromHash=false;
+(function(){
+ try{const h=new URLSearchParams(location.hash.slice(1)).get('pe');
+  if(h!=null){const o=JSON.parse(decodeURIComponent(escape(atob(h))));
+   if(o&&typeof o==='object'){pePicks=o;peFromHash=true;return;}}}catch(e){}
+ try{const o=JSON.parse(localStorage.getItem(PE_KEY));if(o&&typeof o==='object')pePicks=o;}catch(e){}
+})();
+function peSave(){try{localStorage.setItem(PE_KEY,JSON.stringify(pePicks));}catch(e){}}
+function peShare(){
+ let enc='';try{enc=btoa(unescape(encodeURIComponent(JSON.stringify(pePicks))));}catch(e){}
+ const url=location.origin+location.pathname+'#pe='+enc;
+ try{location.hash='pe='+enc;}catch(e){}
+ const b=byId('peShare');
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(url).then(()=>{if(b)b.textContent='✓ Link copied — challenge a friend';})
+   .catch(()=>{if(b)b.textContent='Link in the address bar — copy it';});
+ } else if(b){b.textContent='Link in the address bar — copy it';}
+}
+function peRowHtml(no,nm,p,pts,isFav,pick,res){
+ const sel=pick===nm,won=res===nm;
+ const cls='pe-row'+(sel?' sel':'')+(won?' won':'');
+ const mp=isFav?'<span class="pe-mp">model</span>':'';
+ return `<button class="${cls}" data-no="${no}" data-team="${esc(nm)}">`
+  +`${flag(nm)}<span class="nm">${esc(nm)}</span>${mp}<span class="pe-sp"></span>`
+  +`<span class="pe-pct">${pct(p)}</span><span class="pe-pts ${pePtsCls(pts)}">+${pts}</span>`
+  +`<span class="pe-ck">${sel?'✓':''}</span></button>`;
+}
+function renderPickem(){
+ const root=byId('pe');if(!root)return;
+ const order=ROUND_ORDER.R32.slice().sort((a,b)=>kickoffKey(a)-kickoffKey(b));
+ const r32Start=(DATA.matches['73']&&DATA.matches['73'].date)||'late June';
+ let made=0,fade=0,stake=0,resolved=0,youPts=0,modelPts=0,openCount=0;
+ const cards=order.map(no=>{
+  const pair=pePair(no);if(!pair)return '';
+  const info=DATA.matches[String(no)]||{};
+  const res=peResult(no);
+  // A box opens once its matchup is locked (pairing prob >= PE_CONFIRM) OR the game has
+  // actually been played (a winner is published). The played case guarantees we never
+  // hide or skip scoring a real result, even for a box that never quite reaches the
+  // pairing threshold (e.g. a third-place-dependent slot with a residual tiebreak).
+  if(!res && pair.pPair<PE_CONFIRM){                  // not locked and not played → forming
+   return `<div class="pe-m forming"><div class="pe-meta">R32 · Match ${no}<span class="dot">·</span>${esc(info.date||'')}<span class="dot">·</span>${esc(info.city||'')}<span class="pe-lock">🔒 Forming</span></div>`
+    +`<div class="pe-slot">${esc(info.slot||'')}</div>`
+    +`<div class="pe-proj">Most likely: ${flag(pair.fav)} <b>${esc(pair.fav)}</b> vs ${flag(pair.dog)} <b>${esc(pair.dog)}</b> <span class="muted">· ${pct(pair.pPair)} chance</span></div>`
+    +`<div class="pe-forming-note">Opens to pick once this matchup is confirmed.</div></div>`;
+  }
+  openCount++;
+  const pick=pePicks[String(no)],valid=pick&&(pick===pair.fav||pick===pair.dog);
+  const pf=pair.pFav,pd=1-pf,ptsF=pePts(pf),ptsD=pePts(pd);
+  if(valid){made++;if(pick!==pair.fav)fade++;
+   const pp=pick===pair.fav?ptsF:ptsD;
+   if(res){if(res===pick)youPts+=pp;}else stake+=pp;}
+  if(res){resolved++;if(res===pair.fav)modelPts+=ptsF;}
+  let tag='';
+  if(valid&&!res){if(pf<0.55)tag='<span class="pe-tag flat">Coin flip</span>';
+   else if(pick===pair.dog)tag='<span class="pe-tag">Upset call</span>';}
+  let body=peRowHtml(no,pair.fav,pf,ptsF,true,pick,res)+peRowHtml(no,pair.dog,pd,ptsD,false,pick,res);
+  if(pick&&!valid)body+=`<div class="pe-drop">Your earlier call (<b>${esc(pick)}</b>) dropped out of the model's projected matchup here — re-pick.</div>`;
+  if(res){
+   const yc=!valid?'':(res===pick?`<span class="pe-chip win">✓ You: ${esc(pick)} <b>+${pick===pair.fav?ptsF:ptsD}</b></span>`:`<span class="pe-chip loss">✗ You: ${esc(pick)} <b>+0</b></span>`);
+   const mc=res===pair.fav?`<span class="pe-chip win">✓ Model: ${esc(pair.fav)} <b>+${ptsF}</b></span>`:`<span class="pe-chip loss">✗ Model: ${esc(pair.fav)} <b>+0</b></span>`;
+   body+=`<div class="pe-res">${yc}${mc}</div>`;
+  }
+  return `<div class="pe-m"><div class="pe-meta">R32 · Match ${no}<span class="dot">·</span>${esc(info.date||'')}<span class="dot">·</span>${esc(info.city||'')}${tag}</div>${body}</div>`;
+ }).join('');
+ const live=resolved>0;let tiles,note;
+ if(live){const youLead=youPts>=modelPts,lead=youPts-modelPts;
+  tiles=`<div class="pe-tile${youLead?' lead':''}"><div class="l">You</div><div class="v">${youPts}</div><div class="s">points</div></div>`
+   +`<div class="pe-tile${youLead?'':' lead'}"><div class="l">Model</div><div class="v">${modelPts}</div><div class="s">points</div></div>`
+   +`<div class="pe-tile"><div class="l">Settled</div><div class="v">${resolved}/16</div><div class="s">ties</div></div>`;
+  note=`<b>${resolved} of 16 ties settled.</b> `+(lead>0?`You're ${lead} ahead of the model — keep nailing the upsets.`:lead<0?`The model's ${-lead} ahead — you'll need an upset to swing it.`:`Dead level with the model.`);
+ }else if(openCount>0){
+  tiles=`<div class="pe-tile"><div class="l">Matchups set</div><div class="v">${openCount}/16</div><div class="s">pickable now</div></div>`
+   +`<div class="pe-tile lead"><div class="l">On the table</div><div class="v">+${stake}</div><div class="s">points</div></div>`
+   +`<div class="pe-tile"><div class="l">Fading model</div><div class="v">${fade}</div><div class="s">upset calls</div></div>`;
+  note=`<b>${openCount} of 16 matchups confirmed — pick them now.</b> The rest open as their groups finish. Each pick that comes true banks the points on its badge, so backing the right upset is how you out-score the model.`;
+ }else{
+  tiles=`<div class="pe-tile"><div class="l">Matchups set</div><div class="v">0/16</div><div class="s">still forming</div></div>`
+   +`<div class="pe-tile lead"><div class="l">R32 starts</div><div class="v">${esc(r32Start)}</div><div class="s">pick before then</div></div>`
+   +`<div class="pe-tile"><div class="l">Forming</div><div class="v">${16-openCount}</div><div class="s">matchups</div></div>`;
+  note=`<b>The knockout bracket is still forming.</b> Each box opens to pick the moment its matchup is mathematically confirmed — most in the final days of the group stage. Lock in your calls before the Round of 32 kicks off (${esc(r32Start)}).`;
+ }
+ const shareDis=made===0;
+ const shareTxt=made>0?'🔗 Copy my bracket link':(openCount>0?'Make your picks to share':'Bracket opens soon');
+ const secl=openCount===0?'Round of 32 · matchups forming':(openCount<16?`Round of 32 · ${openCount} of 16 open`:'Round of 32 · pick each winner');
+ root.innerHTML=`<div class="pe-head"><h3>🎯 You vs the model</h3>`
+  +`<div class="pe-sub">Call each Round-of-32 winner once its matchup is locked in. The model always takes the favorite — out-score it by backing the right upset. Win odds come from each team's market-anchored rating (the Elo-logistic the engine uses to settle knockout ties).</div>`
+  +`<div class="pe-tiles">${tiles}</div><div class="pe-note">${note}</div>`
+  +`<div class="pe-actions"><button class="pe-btn primary" id="peShare"${shareDis?' disabled':''}>${shareTxt}</button>`
+  +(made>0?`<button class="pe-btn" id="peClear">Clear</button>`:'')
+  +`</div></div><div class="pe-secl">${secl}</div><div class="pe-grid">${cards}</div>`;
+ root.querySelectorAll('.pe-row').forEach(r=>r.onclick=()=>{
+  const no=r.dataset.no,tm=r.dataset.team;
+  if(pePicks[no]===tm)delete pePicks[no];else pePicks[no]=tm;
+  peSave();renderPickem();});
+ const sb=byId('peShare');if(sb&&!shareDis)sb.onclick=peShare;
+ const cb=byId('peClear');if(cb)cb.onclick=()=>{pePicks={};peSave();renderPickem();};
+}
+// A shared bracket (#pe=… link) is shown in-memory only — never auto-persisted over the
+// visitor's own saved picks. It overwrites their localStorage only if they actively pick
+// (peSave on click). Strip the hash so a later reload restores their own saved bracket.
+if(peFromHash){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
+
 buildFollow();renderChanges();renderRoundNav();renderBracket();renderBracketTree();renderYourTeam();
-renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();
+renderTeams();byId('tsearch').oninput=renderTeams;renderGroups();renderMethod();renderPickem();
 </script></body></html>"""
 
 # Deploy origin baked in so every rebuild (incl. the nightly one) emits absolute

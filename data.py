@@ -84,6 +84,17 @@ MARKET_TITLE_PROB = {
 MATCH_ODDS = {}
 
 # ---------------------------------------------------------------------------
+# COMPLETED KNOCKOUT RESULTS — {match_no: winner_team_name}. Populated from
+# ko_results.json at build time. Empty by default: no knockout result is ever
+# committed here. They enter ONLY through the cross-validated, kickoff-gated
+# fetch_results.py path (mirroring the group-stage no-fabrication boundary). A
+# played knockout match is then held FIXED across every simulation (model.simulate),
+# so the whole bracket stays consistent with reality, and its winner is emitted on
+# the match object for the dashboard's pick'em "you vs the model" scoring.
+# ---------------------------------------------------------------------------
+KO_RESULTS = {}
+
+# ---------------------------------------------------------------------------
 # COMPLETED RESULTS (as of ~8pm ET, 14 Jun 2026). (home, away, hg, ag)
 # Côte d'Ivoire 1-0 Ecuador and Australia 1-0 Türkiye inferred from Elo deltas;
 # scorelines for those two are placeholders pending confirmation (result/winner

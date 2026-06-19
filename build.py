@@ -111,6 +111,52 @@ def merge_match_odds():
         D.MATCH_ODDS = mo
     return len(mo)
 
+def merge_ko_results():
+    """Merge played knockout results from ko_results.json (list of
+    {match_no, winner, ...}) into D.KO_RESULTS = {match_no: winner_name}.
+
+    Each entry must pass the deterministic KNOCKOUT kickoff-time gate
+    (schedule_gate.ko_result_admissible): its scheduled KO_INFO kickoff + the
+    completion buffer must have elapsed. This is the knockout analog of
+    merge_results_log()'s group gate — a premature/fabricated late-round score is
+    skipped and never reaches the published model. Winner must be a known team.
+
+    A played knockout match is then held FIXED across the simulation (so the whole
+    bracket stays consistent) and its winner is emitted on the match object for the
+    pick'em. Like the group path, knockout results enter only via the cross-validated
+    fetch_results.py feed — nothing is hand-authored here."""
+    path = os.path.join(HERE, "ko_results.json")
+    if not os.path.exists(path):
+        return 0
+    try:
+        log = json.load(open(path))
+    except Exception:
+        return 0
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    ko_kos = SG.knockout_kickoffs(D.KO_INFO)
+    added, skipped = 0, 0
+    for e in log:
+        try:
+            mno = int(e["match_no"]); winner = e["winner"]
+        except (KeyError, TypeError, ValueError):
+            continue
+        if mno in D.KO_RESULTS:
+            continue
+        if winner not in D.TEAM_GROUP:
+            print(f"  SKIPPED knockout result — unknown winner {winner!r} for match {mno}")
+            skipped += 1
+            continue
+        ok, reason = SG.ko_result_admissible(mno, ko_kos, now_utc)
+        if not ok:
+            print(f"  SKIPPED unplayed knockout result — {reason}")
+            skipped += 1
+            continue
+        D.KO_RESULTS[mno] = winner; added += 1
+    if skipped:
+        print(f"  ⚠️  {skipped} knockout result(s) in ko_results.json not yet final or "
+              f"with an unknown winner — NOT ingested.")
+    return added
+
 def _build_time():
     """(utc_epoch_int, human_ET_string). Anchored to a real UTC instant and shown in
     true US Eastern regardless of the build machine's timezone, so the stamp is never
@@ -145,11 +191,18 @@ def main():
     nmo = merge_match_odds()
     if nmo:
         print(f"Loaded {nmo} per-game 1X2 line(s) from match_odds.json")
+    nko = merge_ko_results()
+    if nko:
+        print(f"Merged {nko} knockout result(s) from ko_results.json")
     M.GROUP_MATCHES = M.build_group_matches()  # rebuild after all merges
     print("Fitting ratings to market...")
+    # Ratings are team strengths calibrated to the title market; they are NOT
+    # conditioned on played knockout games (only the final sim is), so fitting stays
+    # stable across the bracket.
     ratings = M.fit_ratings(iters=FIT_ITERS, fit_sims=FIT_SIMS, verbose=True)
     print(f"Running {FINAL_SIMS} simulations...")
-    out = M.simulate(FINAL_SIMS, 1.0, np.random.default_rng(20260615), ratings=ratings, collect=True)
+    out = M.simulate(FINAL_SIMS, 1.0, np.random.default_rng(20260615), ratings=ratings,
+                     collect=True, ko_results=D.KO_RESULTS)
     teams = out["teams"]; n = out["n_sims"]; tidx = out["tidx"]
     occ = out["occ"]; reach = out["reach"]; finish = out["finish"]; pairs = out["pairs"]
 
@@ -194,6 +247,9 @@ def main():
             "top_teams": topteams(m, 8),
             "top_pairs": toppairs(m, 5),
             "elimination": True,
+            # realized winner once the match is played (conditioned in the sim above);
+            # None while unplayed. Drives the dashboard pick'em's live scoring.
+            "winner": D.KO_RESULTS.get(m),
         }
 
     # England focus
