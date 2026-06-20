@@ -100,5 +100,17 @@
     "a": "Australia",
     "hg": 2,
     "ag": 0
+  },
+  {
+    "h": "Scotland",
+    "a": "Morocco",
+    "hg": 0,
+    "ag": 1
+  },
+  {
+    "h": "Brazil",
+    "a": "Haiti",
+    "hg": 3,
+    "ag": 0
   }
 ]
