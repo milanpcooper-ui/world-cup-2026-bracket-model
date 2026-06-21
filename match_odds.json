@@ -1,26 +1,18 @@
 [
   {
-    "h": "Germany",
-    "a": "C\u00f4te d'Ivoire",
-    "home": 0.666,
-    "draw": 0.196,
-    "away": 0.137,
-    "_src": "DraftKings via ESPN, close, 06/20"
-  },
-  {
     "h": "Ecuador",
     "a": "Cura\u00e7ao",
-    "home": 0.816,
-    "draw": 0.128,
-    "away": 0.056,
+    "home": 0.823,
+    "draw": 0.12,
+    "away": 0.057,
     "_src": "DraftKings via ESPN, close, 06/20"
   },
   {
     "h": "Tunisia",
     "a": "Japan",
     "home": 0.128,
-    "draw": 0.224,
-    "away": 0.648,
+    "draw": 0.218,
+    "away": 0.654,
     "_src": "DraftKings via ESPN, close, 06/21"
   },
   {
@@ -170,17 +162,17 @@
   {
     "h": "Cura\u00e7ao",
     "a": "C\u00f4te d'Ivoire",
-    "home": 0.056,
-    "draw": 0.113,
-    "away": 0.831,
+    "home": 0.051,
+    "draw": 0.107,
+    "away": 0.842,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
     "h": "Ecuador",
     "a": "Germany",
-    "home": 0.192,
-    "draw": 0.24,
-    "away": 0.568,
+    "home": 0.214,
+    "draw": 0.271,
+    "away": 0.515,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
