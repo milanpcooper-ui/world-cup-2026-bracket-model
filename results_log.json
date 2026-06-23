@@ -178,5 +178,17 @@
     "a": "Iraq",
     "hg": 3,
     "ag": 0
+  },
+  {
+    "h": "Norway",
+    "a": "Senegal",
+    "hg": 3,
+    "ag": 2
+  },
+  {
+    "h": "Jordan",
+    "a": "Algeria",
+    "hg": 1,
+    "ag": 2
   }
 ]
