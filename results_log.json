@@ -202,5 +202,17 @@
     "a": "Ghana",
     "hg": 0,
     "ag": 0
+  },
+  {
+    "h": "Panama",
+    "a": "Croatia",
+    "hg": 0,
+    "ag": 1
+  },
+  {
+    "h": "Colombia",
+    "a": "DR Congo",
+    "hg": 1,
+    "ag": 0
   }
 ]
