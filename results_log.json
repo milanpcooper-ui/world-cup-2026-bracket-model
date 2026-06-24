@@ -190,5 +190,17 @@
     "a": "Algeria",
     "hg": 1,
     "ag": 2
+  },
+  {
+    "h": "Portugal",
+    "a": "Uzbekistan",
+    "hg": 5,
+    "ag": 0
+  },
+  {
+    "h": "England",
+    "a": "Ghana",
+    "hg": 0,
+    "ag": 0
   }
 ]
