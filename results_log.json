@@ -226,5 +226,17 @@
     "a": "Qatar",
     "hg": 3,
     "ag": 1
+  },
+  {
+    "h": "Brazil",
+    "a": "Scotland",
+    "hg": 3,
+    "ag": 0
+  },
+  {
+    "h": "Morocco",
+    "a": "Haiti",
+    "hg": 4,
+    "ag": 2
   }
 ]
