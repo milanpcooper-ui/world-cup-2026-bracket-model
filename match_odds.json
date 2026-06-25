@@ -1,49 +1,17 @@
 [
   {
-    "h": "Bosnia & Herzegovina",
-    "a": "Qatar",
-    "home": 0.711,
-    "draw": 0.175,
-    "away": 0.114,
-    "_src": "DraftKings via ESPN, close, 06/24"
-  },
-  {
-    "h": "Switzerland",
-    "a": "Canada",
-    "home": 0.393,
-    "draw": 0.316,
-    "away": 0.292,
-    "_src": "DraftKings via ESPN, close, 06/24"
-  },
-  {
-    "h": "Morocco",
-    "a": "Haiti",
-    "home": 0.815,
-    "draw": 0.128,
-    "away": 0.057,
-    "_src": "DraftKings via ESPN, close, 06/24"
-  },
-  {
-    "h": "Brazil",
-    "a": "Scotland",
-    "home": 0.725,
-    "draw": 0.174,
-    "away": 0.101,
-    "_src": "DraftKings via ESPN, close, 06/24"
-  },
-  {
     "h": "Mexico",
     "a": "Czechia",
-    "home": 0.488,
-    "draw": 0.254,
-    "away": 0.258,
+    "home": 0.504,
+    "draw": 0.253,
+    "away": 0.243,
     "_src": "DraftKings via ESPN, close, 06/24"
   },
   {
     "h": "South Korea",
     "a": "South Africa",
-    "home": 0.599,
-    "draw": 0.241,
+    "home": 0.597,
+    "draw": 0.243,
     "away": 0.16,
     "_src": "DraftKings via ESPN, close, 06/24"
   },
@@ -58,9 +26,9 @@
   {
     "h": "Ecuador",
     "a": "Germany",
-    "home": 0.249,
-    "draw": 0.228,
-    "away": 0.523,
+    "home": 0.244,
+    "draw": 0.23,
+    "away": 0.526,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
@@ -74,9 +42,9 @@
   {
     "h": "Tunisia",
     "a": "Netherlands",
-    "home": 0.046,
+    "home": 0.045,
     "draw": 0.091,
-    "away": 0.863,
+    "away": 0.864,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
@@ -138,9 +106,9 @@
   {
     "h": "New Zealand",
     "a": "Belgium",
-    "home": 0.06,
-    "draw": 0.128,
-    "away": 0.812,
+    "home": 0.056,
+    "draw": 0.119,
+    "away": 0.825,
     "_src": "DraftKings via ESPN, close, 06/26"
   },
   {
@@ -162,17 +130,17 @@
   {
     "h": "Colombia",
     "a": "Portugal",
-    "home": 0.24,
+    "home": 0.229,
     "draw": 0.256,
-    "away": 0.503,
+    "away": 0.514,
     "_src": "DraftKings via ESPN, close, 06/27"
   },
   {
     "h": "DR Congo",
     "a": "Uzbekistan",
-    "home": 0.532,
+    "home": 0.543,
     "draw": 0.234,
-    "away": 0.234,
+    "away": 0.223,
     "_src": "DraftKings via ESPN, close, 06/27"
   },
   {

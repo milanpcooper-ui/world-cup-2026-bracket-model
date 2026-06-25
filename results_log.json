@@ -214,5 +214,17 @@
     "a": "DR Congo",
     "hg": 1,
     "ag": 0
+  },
+  {
+    "h": "Switzerland",
+    "a": "Canada",
+    "hg": 2,
+    "ag": 1
+  },
+  {
+    "h": "Bosnia & Herzegovina",
+    "a": "Qatar",
+    "hg": 3,
+    "ag": 1
   }
 ]
