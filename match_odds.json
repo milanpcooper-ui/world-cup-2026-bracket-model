@@ -1,34 +1,18 @@
 [
   {
-    "h": "Cura\u00e7ao",
-    "a": "C\u00f4te d'Ivoire",
-    "home": 0.064,
-    "draw": 0.128,
-    "away": 0.808,
-    "_src": "DraftKings via ESPN, close, 06/25"
-  },
-  {
-    "h": "Ecuador",
-    "a": "Germany",
-    "home": 0.2,
-    "draw": 0.209,
-    "away": 0.591,
-    "_src": "DraftKings via ESPN, close, 06/25"
-  },
-  {
     "h": "Japan",
     "a": "Sweden",
-    "home": 0.479,
-    "draw": 0.282,
-    "away": 0.239,
+    "home": 0.436,
+    "draw": 0.286,
+    "away": 0.278,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
     "h": "Tunisia",
     "a": "Netherlands",
     "home": 0.042,
-    "draw": 0.092,
-    "away": 0.866,
+    "draw": 0.096,
+    "away": 0.863,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
@@ -42,9 +26,9 @@
   {
     "h": "USA",
     "a": "T\u00fcrkiye",
-    "home": 0.515,
-    "draw": 0.235,
-    "away": 0.25,
+    "home": 0.529,
+    "draw": 0.232,
+    "away": 0.238,
     "_src": "DraftKings via ESPN, close, 06/25"
   },
   {
@@ -58,8 +42,8 @@
   {
     "h": "Senegal",
     "a": "Iraq",
-    "home": 0.783,
-    "draw": 0.137,
+    "home": 0.773,
+    "draw": 0.147,
     "away": 0.08,
     "_src": "DraftKings via ESPN, close, 06/26"
   },
@@ -75,16 +59,16 @@
     "h": "Uruguay",
     "a": "Spain",
     "home": 0.128,
-    "draw": 0.234,
-    "away": 0.639,
+    "draw": 0.228,
+    "away": 0.644,
     "_src": "DraftKings via ESPN, close, 06/26"
   },
   {
     "h": "Egypt",
     "a": "Iran",
-    "home": 0.384,
-    "draw": 0.363,
-    "away": 0.253,
+    "home": 0.39,
+    "draw": 0.361,
+    "away": 0.248,
     "_src": "DraftKings via ESPN, close, 06/26"
   },
   {
@@ -122,9 +106,9 @@
   {
     "h": "DR Congo",
     "a": "Uzbekistan",
-    "home": 0.55,
-    "draw": 0.228,
-    "away": 0.223,
+    "home": 0.552,
+    "draw": 0.229,
+    "away": 0.219,
     "_src": "DraftKings via ESPN, close, 06/27"
   },
   {
