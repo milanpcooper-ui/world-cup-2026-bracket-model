@@ -238,5 +238,17 @@
     "a": "Haiti",
     "hg": 4,
     "ag": 2
+  },
+  {
+    "h": "Mexico",
+    "a": "Czechia",
+    "hg": 3,
+    "ag": 0
+  },
+  {
+    "h": "South Korea",
+    "a": "South Africa",
+    "hg": 0,
+    "ag": 1
   }
 ]
