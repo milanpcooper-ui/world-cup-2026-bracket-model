@@ -286,5 +286,17 @@
     "a": "Australia",
     "hg": 0,
     "ag": 0
+  },
+  {
+    "h": "Norway",
+    "a": "France",
+    "hg": 1,
+    "ag": 4
+  },
+  {
+    "h": "Senegal",
+    "a": "Iraq",
+    "hg": 5,
+    "ag": 0
   }
 ]
