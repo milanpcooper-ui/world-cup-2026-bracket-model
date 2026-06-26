@@ -250,5 +250,17 @@
     "a": "South Africa",
     "hg": 0,
     "ag": 1
+  },
+  {
+    "h": "Ecuador",
+    "a": "Germany",
+    "hg": 2,
+    "ag": 1
+  },
+  {
+    "h": "Cura\u00e7ao",
+    "a": "C\u00f4te d'Ivoire",
+    "hg": 0,
+    "ag": 2
   }
 ]
