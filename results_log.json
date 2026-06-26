@@ -274,5 +274,17 @@
     "a": "Sweden",
     "hg": 1,
     "ag": 1
+  },
+  {
+    "h": "USA",
+    "a": "T\u00fcrkiye",
+    "hg": 2,
+    "ag": 3
+  },
+  {
+    "h": "Paraguay",
+    "a": "Australia",
+    "hg": 0,
+    "ag": 0
   }
 ]
