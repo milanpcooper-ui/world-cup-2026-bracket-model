@@ -298,5 +298,29 @@
     "a": "Iraq",
     "hg": 5,
     "ag": 0
+  },
+  {
+    "h": "Uruguay",
+    "a": "Spain",
+    "hg": 0,
+    "ag": 1
+  },
+  {
+    "h": "Cape Verde",
+    "a": "Saudi Arabia",
+    "hg": 0,
+    "ag": 0
+  },
+  {
+    "h": "New Zealand",
+    "a": "Belgium",
+    "hg": 1,
+    "ag": 5
+  },
+  {
+    "h": "Egypt",
+    "a": "Iran",
+    "hg": 1,
+    "ag": 1
   }
 ]
