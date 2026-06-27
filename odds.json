@@ -1,20 +1,19 @@
 {
-  "France": 0.2076,
-  "Argentina": 0.1462,
-  "Spain": 0.1353,
+  "France": 0.2137,
+  "Argentina": 0.1487,
+  "Spain": 0.1329,
   "England": 0.1016,
-  "Portugal": 0.0758,
-  "Netherlands": 0.057,
+  "Portugal": 0.0768,
   "Brazil": 0.056,
+  "Netherlands": 0.056,
   "Germany": 0.0451,
   "USA": 0.0273,
-  "Norway": 0.0263,
+  "Norway": 0.0253,
   "Japan": 0.0164,
-  "Morocco": 0.0154,
   "Colombia": 0.0144,
+  "Morocco": 0.0144,
   "Mexico": 0.0124,
   "Belgium": 0.0124,
   "Switzerland": 0.0094,
-  "Ecuador": 0.0064,
-  "Senegal": 0.0055
+  "Ecuador": 0.0064
 }
