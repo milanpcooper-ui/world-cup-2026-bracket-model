@@ -334,5 +334,29 @@
     "a": "Ghana",
     "hg": 2,
     "ag": 1
+  },
+  {
+    "h": "Colombia",
+    "a": "Portugal",
+    "hg": 0,
+    "ag": 0
+  },
+  {
+    "h": "DR Congo",
+    "a": "Uzbekistan",
+    "hg": 3,
+    "ag": 1
+  },
+  {
+    "h": "Argentina",
+    "a": "Jordan",
+    "hg": 3,
+    "ag": 1
+  },
+  {
+    "h": "Algeria",
+    "a": "Austria",
+    "hg": 3,
+    "ag": 3
   }
 ]
