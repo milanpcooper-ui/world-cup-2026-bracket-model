@@ -322,5 +322,17 @@
     "a": "Iran",
     "hg": 1,
     "ag": 1
+  },
+  {
+    "h": "Panama",
+    "a": "England",
+    "hg": 0,
+    "ag": 2
+  },
+  {
+    "h": "Croatia",
+    "a": "Ghana",
+    "hg": 2,
+    "ag": 1
   }
 ]
