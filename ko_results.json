@@ -30,5 +30,13 @@
     "a": "Morocco",
     "hg": 1,
     "ag": 1
+  },
+  {
+    "match_no": 78,
+    "winner": "Norway",
+    "h": "C\u00f4te d'Ivoire",
+    "a": "Norway",
+    "hg": 1,
+    "ag": 2
   }
 ]
