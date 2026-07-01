@@ -46,5 +46,13 @@
     "a": "Sweden",
     "hg": 3,
     "ag": 0
+  },
+  {
+    "match_no": 79,
+    "winner": "Mexico",
+    "h": "Mexico",
+    "a": "Ecuador",
+    "hg": 2,
+    "ag": 0
   }
 ]
