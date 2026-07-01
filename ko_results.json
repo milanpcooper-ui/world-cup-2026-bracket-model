@@ -38,5 +38,13 @@
     "a": "Norway",
     "hg": 1,
     "ag": 2
+  },
+  {
+    "match_no": 77,
+    "winner": "France",
+    "h": "France",
+    "a": "Sweden",
+    "hg": 3,
+    "ag": 0
   }
 ]
