@@ -102,5 +102,13 @@
     "a": "Algeria",
     "hg": 2,
     "ag": 0
+  },
+  {
+    "match_no": 88,
+    "winner": "Egypt",
+    "h": "Australia",
+    "a": "Egypt",
+    "hg": 1,
+    "ag": 1
   }
 ]
