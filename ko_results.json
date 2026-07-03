@@ -54,5 +54,53 @@
     "a": "Ecuador",
     "hg": 2,
     "ag": 0
+  },
+  {
+    "match_no": 80,
+    "winner": "England",
+    "h": "England",
+    "a": "DR Congo",
+    "hg": 2,
+    "ag": 1
+  },
+  {
+    "match_no": 81,
+    "winner": "USA",
+    "h": "USA",
+    "a": "Bosnia & Herzegovina",
+    "hg": 2,
+    "ag": 0
+  },
+  {
+    "match_no": 82,
+    "winner": "Belgium",
+    "h": "Belgium",
+    "a": "Senegal",
+    "hg": 3,
+    "ag": 2
+  },
+  {
+    "match_no": 83,
+    "winner": "Portugal",
+    "h": "Portugal",
+    "a": "Croatia",
+    "hg": 2,
+    "ag": 1
+  },
+  {
+    "match_no": 84,
+    "winner": "Spain",
+    "h": "Spain",
+    "a": "Austria",
+    "hg": 3,
+    "ag": 0
+  },
+  {
+    "match_no": 85,
+    "winner": "Switzerland",
+    "h": "Switzerland",
+    "a": "Algeria",
+    "hg": 2,
+    "ag": 0
   }
 ]
