@@ -110,5 +110,13 @@
     "a": "Egypt",
     "hg": 1,
     "ag": 1
+  },
+  {
+    "match_no": 86,
+    "winner": "Argentina",
+    "h": "Argentina",
+    "a": "Cape Verde",
+    "hg": 3,
+    "ag": 2
   }
 ]
