@@ -118,5 +118,13 @@
     "a": "Cape Verde",
     "hg": 3,
     "ag": 2
+  },
+  {
+    "match_no": 87,
+    "winner": "Colombia",
+    "h": "Colombia",
+    "a": "Ghana",
+    "hg": 1,
+    "ag": 0
   }
 ]
