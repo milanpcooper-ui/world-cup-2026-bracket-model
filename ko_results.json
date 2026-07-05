@@ -134,5 +134,13 @@
     "a": "Morocco",
     "hg": 0,
     "ag": 3
+  },
+  {
+    "match_no": 89,
+    "winner": "France",
+    "h": "Paraguay",
+    "a": "France",
+    "hg": 0,
+    "ag": 1
   }
 ]
