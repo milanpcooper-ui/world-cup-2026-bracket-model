@@ -158,5 +158,13 @@
     "a": "England",
     "hg": 2,
     "ag": 3
+  },
+  {
+    "match_no": 93,
+    "winner": "Spain",
+    "h": "Portugal",
+    "a": "Spain",
+    "hg": 0,
+    "ag": 1
   }
 ]
