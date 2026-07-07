@@ -174,5 +174,13 @@
     "a": "Belgium",
     "hg": 1,
     "ag": 4
+  },
+  {
+    "match_no": 95,
+    "winner": "Argentina",
+    "h": "Argentina",
+    "a": "Egypt",
+    "hg": 3,
+    "ag": 2
   }
 ]
