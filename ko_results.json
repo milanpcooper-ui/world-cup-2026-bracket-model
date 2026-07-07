@@ -166,5 +166,13 @@
     "a": "Spain",
     "hg": 0,
     "ag": 1
+  },
+  {
+    "match_no": 94,
+    "winner": "Belgium",
+    "h": "USA",
+    "a": "Belgium",
+    "hg": 1,
+    "ag": 4
   }
 ]
