@@ -182,5 +182,13 @@
     "a": "Egypt",
     "hg": 3,
     "ag": 2
+  },
+  {
+    "match_no": 96,
+    "winner": "Switzerland",
+    "h": "Switzerland",
+    "a": "Colombia",
+    "hg": 0,
+    "ag": 0
   }
 ]
