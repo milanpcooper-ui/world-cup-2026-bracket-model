@@ -198,5 +198,13 @@
     "a": "Morocco",
     "hg": 2,
     "ag": 0
+  },
+  {
+    "match_no": 98,
+    "winner": "Spain",
+    "h": "Spain",
+    "a": "Belgium",
+    "hg": 2,
+    "ag": 1
   }
 ]
