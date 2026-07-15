@@ -222,5 +222,13 @@
     "a": "Switzerland",
     "hg": 3,
     "ag": 1
+  },
+  {
+    "match_no": 101,
+    "winner": "Spain",
+    "h": "France",
+    "a": "Spain",
+    "hg": 0,
+    "ag": 2
   }
 ]
